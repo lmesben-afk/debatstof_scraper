@@ -16,3 +16,7 @@ Kendt status:
 Anbefaling:
 - Brug denne mappe som ny base.
 - Lav fremtidige versioner ud fra denne.
+
+
+
+GitHub-test 2026-05-29
