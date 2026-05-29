@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+output/
+*.db
+*.sqlite
+*.sqlite3
+articles.json
+new_articles.json
