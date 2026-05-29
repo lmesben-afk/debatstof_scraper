@@ -1,0 +1,10 @@
+v13.28
+
+Bygget fra v13.27.
+
+Rettelser:
+- Altinget: manchetter fjernes helt, fordi debatindlæg ikke har egentlige manchetter.
+- Sjællandske Nyheder: manchet hentes nu kun fra hver enkelt artikelside.
+- SN leder konkret efter billedtekst via figcaption, caption-klasser, billedattributter og caption-felter i indlejret JSON.
+- SN bruger ikke data-bridge-tekst som manchet.
+- Ingen fallback til metadata, intro eller brødtekst.

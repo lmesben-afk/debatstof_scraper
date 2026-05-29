@@ -1,0 +1,264 @@
+sources:
+- name: Altinget
+  media_type: national
+  region: ''
+  base_url: https://www.altinget.dk
+  section_urls:
+  - https://www.altinget.dk/debat
+  sitemap_urls: []
+  article_path_markers:
+  - artikel
+  strict_sitemap_sections:
+  - /artikel/
+  allowed_path_segments:
+  - debat
+  - opinion
+  - kronik
+  - artikel
+  title_prefixes:
+  - 'Debat:'
+  - 'Kronik:'
+  - 'Kommentar:'
+  exclude_path_segments:
+  - job
+  - abonnement
+  - nyheder
+  - navnenyt
+  - seneste
+  - events
+  - annoncering
+  - kontakt
+  - login
+  - analyse
+  - analyser
+  - cookie
+  - privatlivspolitik
+  - om
+  exclude_title_contains:
+  - Her er ugens debat
+  - Her er månedens mest læste debat
+  - Her er årets mest læste debat
+  - Cookie- og privatlivspolitik
+  - Altinget tror på politik
+  - 'Analyse:'
+  - 'Holstein:'
+  - '#dkpol:'
+  - Løkke fik sit smash tilbage
+  - Værdikrigeren Halime Oguz
+  - Sverige er gået til frontalangreb
+  - Der var ikke meget 1. maj
+  - Ørsted foreslog embedsmænd
+- name: Information
+  media_type: national
+  region: ''
+  base_url: https://www.information.dk
+  section_urls:
+  - https://www.information.dk/debat
+  sitemap_urls:
+  - https://www.information.dk/sitemap.xml
+  article_path_markers:
+  - debat
+  - kronik
+  - kommentar
+  strict_sitemap_sections:
+  - /debat/
+  - /kronik/
+  - /kommentar/
+  allowed_path_segments:
+  - debat
+  - kronik
+  - kommentar
+  title_prefixes:
+  - 'Kronik:'
+  - 'Kommentar:'
+  - 'Debat:'
+  - 'Læserbrev:'
+  exclude_path_segments:
+  - annoncer
+  - abonnement
+  - login
+  - kundeservice
+  - bruger
+  - kommentarer
+  exclude_title_contains: []
+- name: Nordjyske
+  media_type: regional
+  region: Nordjylland
+  base_url: https://nordjyske.dk
+  section_urls:
+  - https://nordjyske.dk/nyheder/debat
+  sitemap_urls:
+  - https://nordjyske.dk/sitemap.xml
+  - https://www.nordjyske.dk/sitemap.xml
+  article_path_markers:
+  - laeserbrev
+  - kronik
+  strict_sitemap_sections:
+  - /nyheder/laeserbrev/
+  - /nyheder/kronik/
+  - /nyheder/debat/
+  allowed_path_segments:
+  - laeserbrev
+  - læserbrev
+  - kronik
+  - debat
+  title_prefixes:
+  - 'Læserbrev:'
+  - 'Kronik:'
+  - 'Debat:'
+  exclude_path_segments:
+  - annoncer
+  - abonnement
+  - login
+  exclude_title_contains:
+  - partilederdebat
+  - valgdebat
+  - byrådsdebat
+  - samråd
+  - debattør
+- name: Politiken
+  media_type: national
+  region: ''
+  base_url: https://politiken.dk
+  section_urls:
+  - https://politiken.dk/debat/
+  sitemap_urls: []
+  article_path_markers:
+  - /debat/
+  strict_sitemap_sections: false
+  allowed_path_segments: []
+  title_prefixes: []
+  exclude_path_segments:
+  - /annoncer/
+  - /service/
+  - /forbrugogliv/
+  - /ibyen/
+  - /kultur/
+  - /indland/
+  - /udland/
+  - /sport/
+  - /podcast/
+  exclude_title_contains: []
+- name: Berlingske
+  media_type: national
+  region: ''
+  base_url: https://www.berlingske.dk
+  section_urls:
+  - https://www.berlingske.dk/opinion
+  sitemap_urls: []
+  article_path_markers: []
+  strict_sitemap_sections: false
+  allowed_path_segments: []
+  title_prefixes: []
+  exclude_path_segments: []
+  exclude_title_contains: []
+- name: Kristeligt Dagblad
+  media_type: national
+  region: ''
+  base_url: https://www.kristeligt-dagblad.dk
+  section_urls:
+  - https://www.kristeligt-dagblad.dk/debat
+  sitemap_urls: []
+  article_path_markers:
+  - /debat/
+  strict_sitemap_sections: []
+  allowed_path_segments:
+  - /debat/
+  title_prefixes: []
+  exclude_path_segments: []
+  exclude_title_contains: []
+- name: Avisen Danmark
+  media_type: national
+  region: ''
+  base_url: https://avisendanmark.dk
+  section_urls:
+  - https://avisendanmark.dk/debat
+  sitemap_urls: []
+  article_path_markers:
+  - /debat/
+  strict_sitemap_sections: []
+  allowed_path_segments:
+  - /debat/
+  title_prefixes: []
+  exclude_path_segments: []
+  exclude_title_contains: []
+- name: Århus Stiftstidende
+  media_type: regional
+  region: Østjylland
+  base_url: https://stiften.dk
+  section_urls:
+  - https://stiften.dk/debat
+  sitemap_urls: []
+  article_path_markers:
+  - /debat/
+  strict_sitemap_sections: []
+  allowed_path_segments:
+  - /debat/
+  title_prefixes: []
+  exclude_path_segments: []
+  exclude_title_contains: []
+- name: Fyens Stiftstidende
+  media_type: regional
+  region: Fyn
+  base_url: https://fyens.dk
+  section_urls:
+  - https://fyens.dk/debat
+  sitemap_urls: []
+  article_path_markers:
+  - /debat/
+  strict_sitemap_sections: []
+  allowed_path_segments:
+  - /debat/
+  title_prefixes: []
+  exclude_path_segments: []
+  exclude_title_contains: []
+- name: JydskeVestkysten
+  media_type: regional
+  region: Syd- og Sønderjylland
+  base_url: https://jv.dk
+  section_urls:
+  - https://jv.dk/debat
+  sitemap_urls: []
+  article_path_markers:
+  - /debat/
+  strict_sitemap_sections: []
+  allowed_path_segments:
+  - /debat/
+  title_prefixes: []
+  exclude_path_segments: []
+  exclude_title_contains: []
+- name: Viborg Folkeblad
+  media_type: regional
+  region: Midtjylland
+  base_url: https://viborg-folkeblad.dk
+  section_urls:
+  - https://viborg-folkeblad.dk/debat
+  sitemap_urls: []
+  article_path_markers:
+  - /debat/
+  strict_sitemap_sections: []
+  allowed_path_segments:
+  - /debat/
+  title_prefixes: []
+  exclude_path_segments: []
+  exclude_title_contains: []
+- name: Sjællandske Nyheder
+  media_type: regional
+  region: Sjælland
+  base_url: https://www.sn.dk
+  section_urls:
+  - https://www.sn.dk/debat/
+  sitemap_urls: []
+  article_path_markers:
+  - /debat-sjaelland/
+  strict_sitemap_sections: []
+  allowed_path_segments:
+  - /debat-sjaelland/
+  title_prefixes: []
+  exclude_path_segments:
+  - /doedsannoncer
+  - /dodsannoncer
+  - /dødsannoncer
+  - /abonnement
+  - /login
+  exclude_title_contains: []

@@ -1,0 +1,405 @@
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f5f2;
+  color: #202020;
+}
+
+.topbar {
+  background: #111;
+  color: white;
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: #ccc;
+}
+
+.meta {
+  text-align: right;
+  line-height: 1.6;
+  color: #ddd;
+}
+
+.error {
+  margin: 20px 32px;
+  padding: 16px;
+  background: #ffe5e5;
+  border: 1px solid #cc7777;
+}
+
+.filters {
+  padding: 18px 32px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.filters form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+input, select, button {
+  padding: 9px 10px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+input {
+  min-width: 280px;
+  flex: 1;
+}
+
+button {
+  background: #111;
+  color: white;
+  cursor: pointer;
+}
+
+.reset {
+  padding: 9px 10px;
+  color: #333;
+}
+
+.feed {
+  padding: 24px 32px 60px;
+  max-width: 1050px;
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  border: 1px solid #ddd;
+  border-left: 8px solid #bbb;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.level-høj {
+  border-left-color: #c62828;
+}
+
+.level-interessant {
+  border-left-color: #ef6c00;
+}
+
+.level-overvåg {
+  border-left-color: #f9a825;
+}
+
+.level-lav {
+  border-left-color: #b0bec5;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score {
+  font-weight: bold;
+  font-size: 20px;
+  color: #111;
+}
+
+.level {
+  font-weight: bold;
+}
+
+.media, .type {
+  background: #eee;
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+
+h2 {
+  margin: 12px 0 8px;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+h2 a {
+  color: #111;
+  text-decoration: none;
+}
+
+h2 a:hover {
+  text-decoration: underline;
+}
+
+.deck {
+  font-size: 16px;
+  line-height: 1.45;
+  color: #333;
+}
+
+.why {
+  background: #f7f7f7;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.chip {
+  background: #e8eef7;
+  color: #15385f;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.chip.micro {
+  background: #e7f4e4;
+  color: #245223;
+}
+
+details {
+  margin-top: 12px;
+}
+
+pre {
+  white-space: pre-wrap;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.empty {
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+}
+
+
+
+
+
+.feed {
+  padding-top: 14px;
+}
+
+.card {
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+
+.card-header {
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.big {
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+h2 {
+  margin: 8px 0 6px;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.deck {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.why {
+  margin: 0 0 10px;
+  padding: 7px 10px;
+  font-size: 13px;
+  line-height: 1.3;
+  background: #f3f3f3;
+}
+
+.chips {
+  margin-top: 4px;
+}
+
+.chip {
+  font-size: 12px;
+  padding: 4px 7px;
+}
+
+.filters {
+  padding: 12px 20px;
+}
+
+.filters form {
+  gap: 8px;
+}
+
+select {
+  min-width: 210px;
+}
+
+button {
+  padding: 8px 12px;
+}
+
+.reset {
+  padding-top: 8px;
+}
+
+details {
+  margin-top: 8px;
+}
+
+
+
+.version {
+  font-size: 13px;
+  color: #aaa;
+  font-weight: normal;
+}
+
+
+
+/* v7.8: mere kompakt feed */
+.feed {
+  padding-top: 10px;
+}
+
+.card {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 9px;
+}
+
+.card-header {
+  font-size: 12px;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.media, .type {
+  padding: 2px 6px;
+}
+
+.big {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+h2 {
+  margin: 5px 0 7px;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: normal;
+}
+
+h2 a {
+  font-weight: normal;
+}
+
+.deck {
+  display: none;
+}
+
+.why {
+  display: none;
+}
+
+.chips {
+  margin-top: 2px;
+  gap: 5px;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 3px 7px;
+}
+
+.filters {
+  padding: 10px 16px;
+}
+
+.topbar {
+  padding: 18px 26px;
+}
+
+.subtitle {
+  font-size: 14px;
+}
+
+.meta {
+  font-size: 14px;
+}
+
+
+
+.feedback-form {
+  margin-top: 6px;
+}
+
+.interesting-button {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.interesting-button:hover {
+  color: #000;
+}
+
+.status {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.status.opened {
+  background: #e9eef5;
+  color: #345;
+}
+
+.status.interesting {
+  background: #fff3c4;
+  color: #7a5a00;
+}
+
+
+
+.status.feedback {
+  background: #e7f4e4;
+  color: #245223;
+}
+
+.feedback-reason {
+  margin-top: 5px;
+  font-size: 11px;
+  color: #666;
+}

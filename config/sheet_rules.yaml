@@ -1,0 +1,3 @@
+sort:
+  column_name: "udgivelsestidspunkt"
+  descending: true

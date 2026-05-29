@@ -1,0 +1,18 @@
+Debatstof-scraper stabil hovedversion
+
+Version: v12.9
+Status: STABIL HOVEDVERSION
+
+Denne version er udgangspunktet for videre udvikling.
+
+Kendt status:
+- Scraper virker
+- Google Sheet-skrivning virker
+- Appen virker
+- Feedback virker
+- Mediescrapere ligger i media_scrapers/
+- v12.0-v12.8-refaktorgrenen er kasseret
+
+Anbefaling:
+- Brug denne mappe som ny base.
+- Lav fremtidige versioner ud fra denne.

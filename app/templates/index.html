@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <title>Debatstof-radar v8.3</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Debatstof-radar <span class="version">v8.3</span></h1>
+      <p class="subtitle">Internt JP-værktøj til at spotte debatstof med historiepotentiale</p>
+    </div>
+
+    <div class="meta">
+      <div><strong>{{ total_count }}</strong> artikler i feedet</div>
+      <div>Opdateret: {{ data.generated_at or "ukendt" }}</div>
+    </div>
+  </header>
+
+  <section class="filters">
+    <form method="get">
+      <select name="level">
+        <option value="">Alle prioriteter</option>
+
+        <option value="høj" {% if level == "høj" %}selected{% endif %}>
+          Høj prioritet
+        </option>
+
+        <option value="interessant" {% if level == "interessant" %}selected{% endif %}>
+          Interessant
+        </option>
+
+        <option value="overvåg" {% if level == "overvåg" %}selected{% endif %}>
+          Overvåg
+        </option>
+
+        <option value="lav" {% if level == "lav" %}selected{% endif %}>
+          Lav signalværdi
+        </option>
+      </select>
+
+      <select name="micro">
+        <option value="">Alle debatspor</option>
+
+        {% for raw, label in micro_options %}
+          <option value="{{ raw }}" {% if micro == raw %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">Filtrér</button>
+      <a class="reset" href="/">Nulstil</a>
+    </form>
+  </section>
+
+  <main class="feed">
+    {% for article in articles %}
+      <article class="card level-{{ article.score_level }}">
+
+        <div class="card-header">
+          <span class="level big">{{ article.score_level }}</span>
+          {% if article.feedback_signal_score %}
+            <span class="status feedback">feedback {{ "%+d"|format(article.feedback_signal_score) }}</span>
+          {% endif %}
+          <span class="media">{{ article.medie }}</span>
+          <span class="type">{{ article.debat_type or article.debat_type_standard }}</span>
+
+          {% if article.opened %}
+            <span class="status opened">Åbnet</span>
+          {% endif %}
+
+          {% if article.interesting %}
+            <span class="status interesting">Interessant</span>
+          {% endif %}
+        </div>
+
+        <h2>
+          <a
+            href="/open?url={{ article.url | urlencode }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="{{ article.manchet or '' }}"
+          >
+            {{ article.rubrik }}
+          </a>
+        </h2>
+
+        {% if article.micro_topics_display %}
+          <div class="chips">
+            {% for topic in article.micro_topics_display %}
+              <span class="chip micro">{{ topic.label }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if article.feedback_reasons %}
+          <div class="feedback-reason">{{ article.feedback_reasons | join(" · ") }}</div>
+        {% endif %}
+
+        <form method="post" action="/interesting" class="feedback-form">
+          <input type="hidden" name="url" value="{{ article.url }}">
+
+          <button class="interesting-button" type="submit">
+            {% if article.interesting %}
+              ★ Interessant
+            {% else %}
+              ☆ Markér interessant
+            {% endif %}
+          </button>
+        </form>
+
+      </article>
+    {% endfor %}
+  </main>
+</body>
+</html>

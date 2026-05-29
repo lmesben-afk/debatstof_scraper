@@ -1,0 +1,161 @@
+Politiken:
+  section_url: https://politiken.dk/debat/
+  method: custom_frontpage
+  accepted_url_requirements:
+  - /debat/
+  - /art
+  labels:
+    klumme: Klumme
+    klumme af: Klumme
+    kommentar: Kommentar
+    kommentar af: Kommentar
+    kronik: Kronik
+    debat: Debat
+    læserbrev: Læserbrev
+    laeserbrev: Læserbrev
+Berlingske:
+  section_url: https://www.berlingske.dk/opinion
+  method: custom_frontpage
+  accepted_url_segments:
+  - /opinion/
+  - /kommentatorer/
+  - /laesere/
+  - /synspunkter/
+  - /ledere/
+  - /kronikker/
+  labels:
+    kommentatorer: Kommentar
+    kommentar: Kommentar
+    kronikker: Kronik
+    kronik: Kronik
+    ledere: Leder
+    leder: Leder
+    berlingske mener: Leder
+    laesere: Debat
+    læsere: Debat
+    synspunkter: Debat
+    opinion: Debat
+Nordjyske:
+  section_url: https://nordjyske.dk/nyheder/debat
+  method: custom_frontpage
+  required_card_prefix: Debat
+  sitemap_fallback: false
+Altinget:
+  method: frontpage_generic
+  section_url: https://www.altinget.dk/
+  accepted_url_segments:
+  - /artikel/
+  - /debat/
+  - /embedsvaerk/
+  - /christiansborg/
+  labels:
+    debat: Debat
+    kommentar: Kommentar
+    analyse: Analyse
+    interview: Interview
+    podcast: Podcast
+  notes: Altinget bruger fortsat eksisterende scraperlogik, men reglerne er nu samlet
+    her.
+Information:
+  method: frontpage_generic
+  section_url: https://www.information.dk/debat
+  accepted_url_segments:
+  - /debat/
+  - /indland/
+  - /udland/
+  - /kultur/
+  labels:
+    debat: Debatindlæg
+    kronik: Kronik
+    kommentar: Kommentar
+    leder: Leder
+  notes: Information bruger fortsat eksisterende scraperlogik, men reglerne er nu
+    samlet her.
+Kristeligt Dagblad:
+  section_url: https://www.kristeligt-dagblad.dk/debat
+  method: custom_frontpage
+  accepted_url_segments:
+  - /debat/
+  labels:
+    debat: Debat
+    kronik: Kronik
+    kommentar: Kommentar
+    leder: Leder
+    synspunkt: Debat
+Avisen Danmark:
+  section_url: https://avisendanmark.dk/debat
+  method: custom_frontpage
+  accepted_url_segments:
+  - /debat/
+  labels:
+    læserbrev: Læserbrev
+    laeserbrev: Læserbrev
+    kronik: Kronik
+    klumme: Klumme
+    kommentar: Kommentar
+    leder: Leder
+    debat: Debat
+Århus Stiftstidende:
+  section_url: https://stiften.dk/debat
+  method: custom_frontpage
+  accepted_url_segments:
+  - /debat/
+  labels:
+    læserbrev: Læserbrev
+    laeserbrev: Læserbrev
+    kronik: Kronik
+    klumme: Klumme
+    kommentar: Kommentar
+    leder: Leder
+    debat: Debat
+Fyens Stiftstidende:
+  section_url: https://fyens.dk/debat
+  method: custom_frontpage
+  accepted_url_segments:
+  - /debat/
+  labels:
+    læserbrev: Læserbrev
+    laeserbrev: Læserbrev
+    kronik: Kronik
+    klumme: Klumme
+    kommentar: Kommentar
+    leder: Leder
+    debat: Debat
+JydskeVestkysten:
+  section_url: https://jv.dk/debat
+  method: custom_frontpage
+  accepted_url_segments:
+  - /debat/
+  labels:
+    læserbrev: Læserbrev
+    laeserbrev: Læserbrev
+    kronik: Kronik
+    klumme: Klumme
+    kommentar: Kommentar
+    leder: Leder
+    debat: Debat
+Viborg Folkeblad:
+  section_url: https://viborg-folkeblad.dk/debat
+  method: custom_frontpage
+  accepted_url_segments:
+  - /debat/
+  labels:
+    læserbrev: Læserbrev
+    laeserbrev: Læserbrev
+    kronik: Kronik
+    klumme: Klumme
+    kommentar: Kommentar
+    leder: Leder
+    debat: Debat
+Sjællandske Nyheder:
+  section_url: https://www.sn.dk/debat/
+  method: custom_databridge
+  accepted_url_segments:
+  - /debat-sjaelland/
+  labels:
+    debat: Debat
+    debat sjælland: Debat
+    debat sjaelland: Debat
+    leder: Leder
+    læserbrev: Læserbrev
+    laeserbrev: Læserbrev
