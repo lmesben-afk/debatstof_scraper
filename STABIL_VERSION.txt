@@ -21,3 +21,4 @@ Anbefaling:
 
 GitHub-test 2026-05-29
 GitHub-test 2026-6-10
+Denne tekst findes kun på Git-training branchen
