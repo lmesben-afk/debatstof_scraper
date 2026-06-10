@@ -2399,6 +2399,13 @@ def run(dry_run: bool, limit_per_source: int, only: Optional[str], min_section_r
         print(f"\nDry run færdig. {len(items)} poster fundet.")
         return items
 
+    # SQLite skrives før Google Sheets, så artikler gemmes lokalt selv hvis Sheets fejler.
+    try:
+        from db.database import write_items_to_sqlite
+        write_items_to_sqlite([item_to_app_dict(i) for i in items])
+    except Exception as db_exc:
+        print(f"[ADVARSEL] SQLite-skrivning fejlede: {db_exc}")
+
     try:
         nye_artikler, dubletter, new_items = append_items_to_sheet(items)
 
