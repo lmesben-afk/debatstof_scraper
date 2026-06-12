@@ -45,9 +45,9 @@ UPSERT_SQL = """
 INSERT INTO artikler (
     artikel_id, fundet_kl, udgivet_kl, medie, medietype, region,
     rubrik, manchet, forfatter, debat_type, url, fundet_via,
-    temaer, entiteter, jp_signaler, story_score, status, kørsel_id
+    temaer, mikroemner, entiteter, jp_signaler, story_score, status, kørsel_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(artikel_id) DO UPDATE SET
     udgivet_kl  = COALESCE(NULLIF(excluded.udgivet_kl,  ''), udgivet_kl),
     rubrik      = COALESCE(NULLIF(excluded.rubrik,      ''), rubrik),
@@ -56,12 +56,22 @@ ON CONFLICT(artikel_id) DO UPDATE SET
     debat_type  = excluded.debat_type,
     fundet_via  = excluded.fundet_via,
     temaer      = excluded.temaer,
+    mikroemner  = excluded.mikroemner,
     entiteter   = excluded.entiteter,
     jp_signaler = excluded.jp_signaler,
     story_score = excluded.story_score,
     status      = excluded.status,
     kørsel_id   = excluded.kørsel_id;
 """
+
+
+def _migrate_schema(conn: sqlite3.Connection) -> None:
+    """Tilføjer nye kolonner til eksisterende databaser uden at slette data."""
+    try:
+        conn.execute("ALTER TABLE artikler ADD COLUMN mikroemner TEXT")
+    except sqlite3.OperationalError:
+        pass  # Kolonnen eksisterer allerede
+    conn.commit()
 
 
 def get_db_path() -> Path:
@@ -103,7 +113,11 @@ def write_items_to_sqlite(items: List[dict], kørsel_id: str = "") -> None:
             d.get("url", "") or "",
             d.get("fundet_via", "") or "",
             json.dumps(d.get("temaer") or [], ensure_ascii=False),
-            json.dumps(d.get("entiteter") or [], ensure_ascii=False),
+            json.dumps(
+                [t["mikroemne"] for t in (d.get("mikroemner") or [])],
+                ensure_ascii=False,
+            ),
+            json.dumps(d.get("entiteter") or {}, ensure_ascii=False),
             json.dumps(d.get("historiepotentiale_begrundelse") or [], ensure_ascii=False),
             d.get("historiepotentiale_score"),
             d.get("status", "") or "",
@@ -115,6 +129,7 @@ def write_items_to_sqlite(items: List[dict], kørsel_id: str = "") -> None:
 
     with sqlite3.connect(db_path) as conn:
         conn.execute(CREATE_TABLE_SQL)
+        _migrate_schema(conn)
         conn.executemany(UPSERT_SQL, rows)
         conn.commit()
 
