@@ -119,3 +119,124 @@ def write_items_to_sqlite(items: List[dict], kørsel_id: str = "") -> None:
         conn.commit()
 
     print(f"Skrev {len(rows)} poster til SQLite: {db_path}")
+
+
+# ---------------------------------------------------------------------------
+# Læsefunktioner — skriver aldrig til databasen
+# ---------------------------------------------------------------------------
+
+def _connect_readonly() -> sqlite3.Connection:
+    """Åbner databasen i read-only tilstand via URI."""
+    db_path = get_db_path()
+    uri = db_path.as_uri() + "?mode=ro"
+    return sqlite3.connect(uri, uri=True)
+
+
+def get_stats() -> dict:
+    """
+    Returnerer overordnet statistik om databasens indhold.
+
+    Returnerer en tom dict hvis databasen ikke eksisterer endnu.
+    """
+    db_path = get_db_path()
+    if not db_path.exists():
+        return {}
+
+    today = __import__("datetime").date.today().isoformat()
+    week_ago = (__import__("datetime").date.today() - __import__("datetime").timedelta(days=7)).isoformat()
+
+    with _connect_readonly() as conn:
+        (total,) = conn.execute("SELECT COUNT(*) FROM artikler").fetchone()
+        (i_dag,) = conn.execute(
+            "SELECT COUNT(*) FROM artikler WHERE fundet_kl >= ?", (today,)
+        ).fetchone()
+        (seneste_7_dage,) = conn.execute(
+            "SELECT COUNT(*) FROM artikler WHERE fundet_kl >= ?", (week_ago,)
+        ).fetchone()
+
+    return {
+        "total": total,
+        "i_dag": i_dag,
+        "seneste_7_dage": seneste_7_dage,
+    }
+
+
+def get_count_by_source() -> list[tuple[str, int]]:
+    """
+    Returnerer antal artikler pr. medie, sorteret faldende.
+
+    Returnerer tom liste hvis databasen ikke eksisterer.
+    """
+    db_path = get_db_path()
+    if not db_path.exists():
+        return []
+
+    with _connect_readonly() as conn:
+        rows = conn.execute(
+            "SELECT medie, COUNT(*) AS antal FROM artikler GROUP BY medie ORDER BY antal DESC"
+        ).fetchall()
+
+    return rows
+
+
+def get_recent_articles(limit: int = 10) -> list[dict]:
+    """
+    Returnerer de seneste artikler sorteret efter fundet_kl faldende.
+
+    Returnerer tom liste hvis databasen ikke eksisterer.
+    """
+    db_path = get_db_path()
+    if not db_path.exists():
+        return []
+
+    with _connect_readonly() as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """
+            SELECT udgivet_kl, medie, story_score, rubrik
+            FROM artikler
+            ORDER BY fundet_kl DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    return [dict(r) for r in rows]
+
+
+def get_duplicates() -> dict:
+    """
+    Finder mulige dubletter på URL og på medie+rubrik.
+
+    Returnerer en dict med to lister: 'url' og 'medie_rubrik'.
+    Returnerer tomme lister hvis databasen ikke eksisterer.
+    """
+    db_path = get_db_path()
+    if not db_path.exists():
+        return {"url": [], "medie_rubrik": []}
+
+    with _connect_readonly() as conn:
+        url_dupes = conn.execute(
+            """
+            SELECT url, COUNT(*) AS antal
+            FROM artikler
+            GROUP BY url
+            HAVING antal > 1
+            ORDER BY antal DESC
+            """
+        ).fetchall()
+
+        medie_rubrik_dupes = conn.execute(
+            """
+            SELECT medie, rubrik, COUNT(*) AS antal
+            FROM artikler
+            GROUP BY medie, rubrik
+            HAVING antal > 1
+            ORDER BY antal DESC
+            """
+        ).fetchall()
+
+    return {
+        "url": url_dupes,
+        "medie_rubrik": medie_rubrik_dupes,
+    }

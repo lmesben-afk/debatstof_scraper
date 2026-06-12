@@ -2431,8 +2431,57 @@ def run(dry_run: bool, limit_per_source: int, only: Optional[str], min_section_r
 
     return items
 
+def print_db_stats() -> None:
+    """
+    Viser database-statistik og stopper. Kører ingen scraping.
+    Læser kun fra databasen — skriver aldrig.
+    """
+    from db.database import get_stats, get_count_by_source, get_recent_articles, get_duplicates
+    from db.database import get_db_path
+
+    db_path = get_db_path()
+    print(f"\nSQLite-database: {db_path}")
+
+    if not db_path.exists():
+        print("Databasen er ikke oprettet endnu. Kør scraperen uden --db-stats først.")
+        return
+
+    stats = get_stats()
+    print(f"\n--- Overordnet statistik ---")
+    print(f"Artikler i alt:             {stats.get('total', 0)}")
+    print(f"Artikler fundet i dag:      {stats.get('i_dag', 0)}")
+    print(f"Artikler seneste 7 dage:    {stats.get('seneste_7_dage', 0)}")
+
+    print(f"\n--- Artikler pr. medie ---")
+    for medie, antal in get_count_by_source():
+        print(f"  {medie:<35} {antal}")
+
+    print(f"\n--- Seneste 10 artikler ---")
+    for a in get_recent_articles(limit=10):
+        dato = (a.get("udgivet_kl") or "")[:10]
+        score = str(a.get("story_score") or "").rjust(3)
+        medie = (a.get("medie") or "")[:20]
+        rubrik = (a.get("rubrik") or "")[:60]
+        print(f"  {dato}  score={score}  {medie:<20}  {rubrik}")
+
+    dupes = get_duplicates()
+
+    url_dupes = dupes.get("url", [])
+    print(f"\n--- Dubletter på URL: {len(url_dupes)} ---")
+    for url, antal in url_dupes[:10]:
+        print(f"  ({antal}x) {url[:80]}")
+
+    mr_dupes = dupes.get("medie_rubrik", [])
+    print(f"\n--- Dubletter på medie + rubrik: {len(mr_dupes)} ---")
+    for medie, rubrik, antal in mr_dupes[:10]:
+        print(f"  ({antal}x) {medie}: {rubrik[:60]}")
+
+    print()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Debatstof-scraper")
+    parser.add_argument("--db-stats", action="store_true", help="Vis database-statistik og stop. Kører ingen scraping.")
     parser.add_argument("--dry-run", action="store_true", help="Skriv ikke til Google Sheet")
     parser.add_argument("--limit-per-source", type=int, default=30, help="Maks antal URL'er pr. kilde i denne kørsel")
     parser.add_argument("--only", type=str, default=None, help="Test kun én kilde, fx Altinget")
@@ -2442,13 +2491,21 @@ if __name__ == "__main__":
     parser.add_argument("--json", type=str, default=DEFAULT_JSON_OUTPUT, help="Skriv resultatet til en JSON-fil, fx output/latest/articles.json")
     parser.add_argument("--new-json", type=str, default=DEFAULT_NEW_JSON_OUTPUT, help="Skriv nye artikler til JSON, fx output/latest/new_articles.json")
     args = parser.parse_args()
-    run(
-        dry_run=args.dry_run,
-        limit_per_source=args.limit_per_source,
-        only=args.only,
-        min_section_results=args.min_section_results,
-        show_urls=args.show_urls,
-        csv_output=args.csv,
-        json_output=args.json,
-        new_json_output=args.new_json,
-    )
+
+    if args.db_stats:
+        try:
+            load_env_file()
+        except RuntimeError:
+            pass  # Ingen .env — get_db_path() bruger fallback-stien
+        print_db_stats()
+    else:
+        run(
+            dry_run=args.dry_run,
+            limit_per_source=args.limit_per_source,
+            only=args.only,
+            min_section_results=args.min_section_results,
+            show_urls=args.show_urls,
+            csv_output=args.csv,
+            json_output=args.json,
+            new_json_output=args.new_json,
+        )
