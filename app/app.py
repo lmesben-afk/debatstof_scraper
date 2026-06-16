@@ -1,9 +1,15 @@
 from pathlib import Path
+import sys
 import json
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from flask import Flask, render_template, request, redirect
 import os
 import gspread
+from db.database import get_db_path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -186,11 +192,7 @@ def load_data_from_db():
     import sqlite3
     from datetime import date, timedelta
 
-    env_val = os.environ.get("SQLITE_DB_PATH")
-    db_path = Path(env_val) if env_val else Path(
-        r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus"
-        r"\Jyllands-Posten\Scrapere\Fælles-data\debatstof.db"
-    )
+    db_path = get_db_path()
 
     if not db_path.exists():
         return None
