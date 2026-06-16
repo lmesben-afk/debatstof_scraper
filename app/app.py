@@ -182,6 +182,51 @@ def load_data():
         return json.load(f)
 
 
+def load_data_from_db():
+    import sqlite3
+    from datetime import date, timedelta
+
+    env_val = os.environ.get("SQLITE_DB_PATH")
+    db_path = Path(env_val) if env_val else Path(
+        r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus"
+        r"\Jyllands-Posten\Scrapere\Fælles-data\debatstof.db"
+    )
+
+    if not db_path.exists():
+        return None
+
+    week_ago = (date.today() - timedelta(days=7)).isoformat()
+
+    try:
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT * FROM artikler WHERE fundet_kl >= ? ORDER BY fundet_kl DESC",
+            (week_ago,),
+        ).fetchall()
+        conn.close()
+    except Exception as exc:
+        print(f"[WARN] SQLite-læsning fejlede: {exc}")
+        return None
+
+    articles = []
+    for row in rows:
+        d = dict(row)
+        d["temaer"]                         = json.loads(d.get("temaer")      or "[]")
+        d["mikroemner"]                     = json.loads(d.get("mikroemner")   or "[]")
+        d["entiteter"]                      = json.loads(d.get("entiteter")    or "{}")
+        d["historiepotentiale_score"]       = d.pop("story_score", 0)
+        d["historiepotentiale_begrundelse"] = json.loads(d.pop("jp_signaler")  or "[]")
+        articles.append(d)
+
+    return {
+        "generated_at": articles[0]["fundet_kl"][:10] if articles else "",
+        "count": len(articles),
+        "sources": [],
+        "articles": articles,
+    }
+
+
 def score_level(score):
     try:
         score = int(score)
@@ -369,7 +414,10 @@ def filter_articles(articles, micro="", level=""):
 
 @app.route("/")
 def index():
-    data = load_data()
+    data = load_data_from_db()
+    if data is None:
+        print("[WARN] SQLite utilgængelig — falder tilbage til articles.json")
+        data = load_data()
     feedback = load_feedback()
 
     raw_articles = data.get("articles", [])
