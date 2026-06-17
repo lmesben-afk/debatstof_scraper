@@ -57,25 +57,24 @@
 
   <main class="feed">
     {% for article in articles %}
-      <article class="card level-{{ article.score_level }}">
+      <article class="card level-{{ article.score_level }}{% if article.interesting %} is-interesting{% endif %}">
 
+        <!-- Linje 1: score-badge + medie -->
         <div class="card-header">
           <span class="level big">{{ article.score_level }}</span>
-          {% if article.feedback_signal_score %}
-            <span class="status feedback">feedback {{ "%+d"|format(article.feedback_signal_score) }}</span>
-          {% endif %}
           <span class="media">{{ article.medie }}</span>
-          <span class="type">{{ article.debat_type or article.debat_type_standard }}</span>
-
           {% if article.opened %}
             <span class="status opened">Åbnet</span>
           {% endif %}
-
           {% if article.interesting %}
             <span class="status interesting">Interessant</span>
           {% endif %}
+          {% if article.feedback_signal_score %}
+            <span class="status feedback">feedback {{ "%+d"|format(article.feedback_signal_score) }}</span>
+          {% endif %}
         </div>
 
+        <!-- Linje 2: rubrik -->
         <h2>
           <a
             href="/open?url={{ article.url | urlencode }}"
@@ -87,6 +86,12 @@
           </a>
         </h2>
 
+        <!-- Linje 3: manchet — kun ved høj eller interessant -->
+        {% if article.score_level in ('høj', 'interessant') and article.manchet %}
+          <p class="deck">{{ article.manchet }}</p>
+        {% endif %}
+
+        <!-- Linje 4: mikroemner -->
         {% if article.micro_topics_display %}
           <div class="chips">
             {% for topic in article.micro_topics_display %}
@@ -95,13 +100,9 @@
           </div>
         {% endif %}
 
-        {% if article.feedback_reasons %}
-          <div class="feedback-reason">{{ article.feedback_reasons | join(" · ") }}</div>
-        {% endif %}
-
+        <!-- Feedback-knap: skjult, vises ved hover -->
         <form method="post" action="/interesting" class="feedback-form">
           <input type="hidden" name="url" value="{{ article.url }}">
-
           <button class="interesting-button" type="submit">
             {% if article.interesting %}
               ★ Interessant
