@@ -55,65 +55,64 @@
     </form>
   </section>
 
+  {% set score_labels = {'høj': 'HØJ', 'interessant': 'INT', 'overvåg': 'OVR', 'lav': 'LAV'} %}
+
   <main class="feed">
-    {% for article in articles %}
-      <article class="card level-{{ article.score_level }}{% if article.interesting %} is-interesting{% endif %}">
+    <table class="article-table">
+      <thead>
+        <tr>
+          <th class="col-score">Score</th>
+          <th class="col-medie">Medie</th>
+          <th class="col-rubrik">Rubrik</th>
+          <th class="col-emner">Emner</th>
+          <th class="col-star">★</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for article in articles %}
+        <tr class="row-{{ article.score_level }}{% if article.opened %} row-opened{% endif %}">
 
-        <!-- Linje 1: score-badge + medie -->
-        <div class="card-header">
-          <span class="level big">{{ article.score_level }}</span>
-          <span class="media">{{ article.medie }}</span>
-          {% if article.opened %}
-            <span class="status opened">Åbnet</span>
-          {% endif %}
-          {% if article.interesting %}
-            <span class="status interesting">Interessant</span>
-          {% endif %}
-          {% if article.feedback_signal_score %}
-            <span class="status feedback">feedback {{ "%+d"|format(article.feedback_signal_score) }}</span>
-          {% endif %}
-        </div>
+          <td class="col-score">
+            <span class="badge level-{{ article.score_level }}">
+              {{ score_labels.get(article.score_level, article.score_level) }}
+            </span>
+          </td>
 
-        <!-- Linje 2: rubrik -->
-        <h2>
-          <a
-            href="/open?url={{ article.url | urlencode }}"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="{{ article.manchet or '' }}"
-          >
-            {{ article.rubrik }}
-          </a>
-        </h2>
+          <td class="col-medie">{{ article.medie }}</td>
 
-        <!-- Linje 3: manchet — kun ved høj eller interessant -->
-        {% if article.score_level in ('høj', 'interessant') and article.manchet %}
-          <p class="deck">{{ article.manchet }}</p>
-        {% endif %}
-
-        <!-- Linje 4: mikroemner -->
-        {% if article.micro_topics_display %}
-          <div class="chips">
-            {% for topic in article.micro_topics_display %}
-              <span class="chip micro">{{ topic.label }}</span>
-            {% endfor %}
-          </div>
-        {% endif %}
-
-        <!-- Feedback-knap: skjult, vises ved hover -->
-        <form method="post" action="/interesting" class="feedback-form">
-          <input type="hidden" name="url" value="{{ article.url }}">
-          <button class="interesting-button" type="submit">
-            {% if article.interesting %}
-              ★ Interessant
-            {% else %}
-              ☆ Markér interessant
+          <td class="col-rubrik">
+            <a href="/open?url={{ article.url | urlencode }}"
+               target="_blank" rel="noopener noreferrer"
+               title="{{ article.manchet or '' }}">
+              {{ article.rubrik }}
+            </a>
+            {% if article.score_level in ('høj', 'interessant') and article.manchet %}
+              <div class="manchet">{{ article.manchet }}</div>
             {% endif %}
-          </button>
-        </form>
+          </td>
 
-      </article>
-    {% endfor %}
+          <td class="col-emner">
+            {% if article.micro_topics_display %}
+              <div class="chips">
+                {% for topic in article.micro_topics_display %}
+                  <span class="chip micro">{{ topic.label }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </td>
+
+          <td class="col-star">
+            <form method="post" action="/interesting">
+              <input type="hidden" name="url" value="{{ article.url }}">
+              <button class="star-button{% if article.interesting %} star-active{% endif %}"
+                      type="submit" title="Markér interessant">★</button>
+            </form>
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </main>
 </body>
 </html>
