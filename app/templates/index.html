@@ -73,9 +73,13 @@
         <tr class="row-{{ article.score_level }}{% if article.opened %} row-opened{% endif %}">
 
           <td class="col-score">
-            <span class="badge level-{{ article.score_level }}">
-              {{ score_labels.get(article.score_level, article.score_level) }}
-            </span>
+            {% set s = article.score_adjusted or 0 %}
+            {% if s >= 75 %}{% set score_color = '#B71C1C' %}
+            {% elif s >= 50 %}{% set score_color = '#F57C00' %}
+            {% elif s >= 25 %}{% set score_color = '#1565C0' %}
+            {% else %}{% set score_color = '#888888' %}
+            {% endif %}
+            <span class="score-num" style="color: {{ score_color }}">{{ s }}</span>
           </td>
 
           <td class="col-medie">{{ article.medie }}</td>

@@ -504,7 +504,7 @@ h2 {
 }
 
 .article-table tbody tr {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #d0d0d0;
 }
 
 .article-table tbody tr:hover {
@@ -569,6 +569,8 @@ h2 {
   padding: 1px 5px;
 }
 
-.row-opened td {
-  opacity: 0.6;
+
+.score-num {
+  font-weight: bold;
+  font-size: 14px;
 }
