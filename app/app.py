@@ -362,6 +362,43 @@ def feedback_signal_for_article(article, feedback_signals):
     return total, unique_reasons
 
 
+DANISH_MONTHS = ["jan", "feb", "mar", "apr", "maj", "jun",
+                  "jul", "aug", "sep", "okt", "nov", "dec"]
+
+DANISH_MONTH_NAMES = {
+    "januar": 1, "februar": 2, "marts": 3, "april": 4,
+    "maj": 5, "juni": 6, "juli": 7, "august": 8,
+    "september": 9, "oktober": 10, "november": 11, "december": 12,
+}
+
+
+def format_pub_dato(value: str) -> str:
+    if not value or not value.strip():
+        return ""
+    value = value.strip()
+
+    # ISO-format: "2026-06-17T..." eller "2026-06-17"
+    if len(value) >= 10 and value[4] == "-" and value[7] == "-":
+        try:
+            day = int(value[8:10])
+            month = int(value[5:7])
+            return f"{day}/{month}"
+        except Exception:
+            pass
+
+    # Dansk fritekst: "17. juni 2026, 15:01"
+    try:
+        parts = value.split()
+        day = int(parts[0].rstrip("."))
+        month = DANISH_MONTH_NAMES.get(parts[1].lower())
+        if month:
+            return f"{day}/{month}"
+    except Exception:
+        pass
+
+    return ""
+
+
 def prepare_article(article, feedback, feedback_signals):
     score = article.get("historiepotentiale_score") or 0
     url = article.get("url", "")
@@ -380,6 +417,7 @@ def prepare_article(article, feedback, feedback_signals):
     prepared["micro_topics_display"] = micro_topics_to_display(article.get("mikroemner"))
     prepared["opened"] = item_feedback.get("opened", False)
     prepared["interesting"] = item_feedback.get("interesting", False)
+    prepared["pub_dato"] = format_pub_dato(article.get("udgivet_kl") or "")
 
     return prepared
 
