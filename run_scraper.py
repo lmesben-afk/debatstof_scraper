@@ -789,6 +789,14 @@ JP_VALUE_KEYWORDS = {
         "værdikamp", "liberalt", "liberale", "håndtryk", "fundamentalisme",
         "ytringsfrihed", "frihedsrettigheder", "kulturkamp",
     ],
+    "personligt_ansvar": [
+        "personligt ansvar", "ansvar for sig selv", "eget ansvar", "selvforsørgelse",
+        "tage ansvar", "ansvar for eget", "ansvarlig", "selvstændighed",
+    ],
+    "erhvervsliv_og_vækst": [
+        "erhvervsliv", "vækst", "konkurrenceevne", "iværksætteri", "virksomheder",
+        "investeringer", "eksport", "arbejdspladser", "regulering",
+    ],
 }
 
 HIGH_VALUE_THEMES = [
@@ -826,95 +834,73 @@ def detect_jp_value_signals(text: str) -> list[str]:
 def calculate_story_potential(item: DebateItem) -> tuple[int, list[str]]:
     """
     JP-orienteret historiepotentiale-score.
-
-    Målet er ikke blot 'vigtig debat', men:
-    Kan debatindlægget udvikles til en relevant JP-historie?
-
-    Vægter derfor bl.a.:
-    - frit valg og liberale værdier
-    - kritik af formynderi/system/velfærdsstat
-    - retssikkerhed
-    - skat/afgifter
-    - kendte aktører
-    - konflikt
-    - regional debat med national vinkel
+    7 faktorer: JP-værdier, navngiven aktør, regional medie, mikroemner,
+    konflikt, debatformat og manglende forfatter.
     """
     score = 0
     reasons = []
 
     text = f"{item.title or ''} {item.deck or ''}".lower()
 
-    themes = classify_themes(item.title, item.deck)
     entities = extract_entities(item.title, item.deck)
     micro_topics = detect_micro_topics(item.title, item.deck)
 
-    # JP-strategiske værdier
+    # Faktor 1: JP-kerneværdier (+20)
     jp_signals = detect_jp_value_signals(text)
-    if jp_signals:
-        score += min(len(jp_signals) * 18, 45)
-        readable = {
-            "frihed_og_frit_valg": "Frit valg/liberale værdier",
-            "kritik_af_formynderstat": "Kritik af formynderi",
-            "velfærdsstatens_grænser": "Velfærdsstatens grænser",
-            "borger_mod_system": "Borger mod system",
-            "skat_og_afgifter": "Skat/afgifter",
-            "værdikamp": "Værdikamp",
-        }
-        reasons.extend([readable.get(signal, signal) for signal in jp_signals])
-
-    # Kendte aktører/institutioner
-    found_high_value = False
-    for names in entities.values():
-        for name in names:
-            if name in HIGH_VALUE_ENTITIES:
-                found_high_value = True
-                break
-
-    if found_high_value:
+    core_jp_signals = {
+        "frihed_og_frit_valg", "personligt_ansvar", "erhvervsliv_og_vækst",
+        "skat_og_afgifter",
+    }
+    if any(s in core_jp_signals for s in jp_signals):
         score += 20
-        reasons.append("Kendt aktør")
+        readable = {
+            "frihed_og_frit_valg": "Frit valg",
+            "personligt_ansvar": "Personligt ansvar",
+            "erhvervsliv_og_vækst": "Erhvervsliv/vækst",
+            "skat_og_afgifter": "Skat/afgifter",
+        }
+        hits = [readable[s] for s in jp_signals if s in readable]
+        if hits:
+            reasons.append(f"JP-kerneværdi: {', '.join(hits)}")
 
-    # Konflikt/debat
+    # Faktor 2: Navngiven aktør (+15)
+    has_entity = any(names for names in entities.values())
+    if has_entity:
+        score += 15
+        reasons.append("Navngiven aktør")
+
+    # Faktor 3: Regionalt medie (+10)
+    if item.media_type == "regional":
+        score += 10
+        reasons.append("Regionalt medie")
+
+    # Faktor 4: Aktive mikroemner (+10 pr. emne, maks +30)
+    micro_bonus = min(len(micro_topics) * 10, 30)
+    if micro_bonus > 0:
+        score += micro_bonus
+        labels = [t["mikroemne"].replace("_", " ") for t in micro_topics[:3]]
+        reasons.append(f"Mikroemne: {', '.join(labels)}")
+
+    # Faktor 5: Konflikt/uenighed (+10)
     conflict_hits = sum(1 for keyword in CONFLICT_KEYWORDS if keyword in text)
     if conflict_hits:
-        score += min(conflict_hits * 8, 24)
-        reasons.append("Konflikt/debat")
-
-    # Temaer med høj JP-relevans
-    high_theme_hits = [theme for theme in themes if theme in HIGH_VALUE_THEMES]
-    if high_theme_hits:
-        score += min(len(high_theme_hits) * 10, 25)
-        reasons.append("Højrelevant tema")
-
-    # Flere temaer kan give større historiepotentiale
-    if len(themes) >= 2:
         score += 10
-        reasons.append("Flere temaer")
+        reasons.append("Konflikt/uenighed")
 
-    # Politik + retssikkerhed er stærk JP-kombination
-    if "politik" in themes and "ret_og_retsstat" in themes:
-        score += 12
-        reasons.append("Retsstatspolitik")
+    # Faktor 6: Debatformat (+10)
+    debate_formats = {"kronik", "kommentar", "læserbrev"}
+    if item.debate_type and item.debate_type.lower() in debate_formats:
+        score += 10
+        reasons.append(f"Format: {item.debate_type}")
 
-    # Regional debat med nationalt potentiale
-    if item.media_type == "regional" and (
-        "politik" in themes or
-        "klima_og_miljø" in themes or
-        "ret_og_retsstat" in themes or
-        "velfærd" in themes
-    ):
-        score += 12
-        reasons.append("Regional debat med national vinkel")
+    # Faktor 7: Manglende forfatter (-10), undtagen ledere og redaktionelle
+    exempt_types = {"leder", "redaktionel"}
+    if not item.author and (not item.debate_type or item.debate_type.lower() not in exempt_types):
+        score -= 10
+        reasons.append("Mangler forfatter")
 
-    # Særligt løft til debatindlæg der meget direkte handler om frit valg i velfærd.
-    if "frihed_og_frit_valg" in jp_signals and (
-        "velfærd" in themes or "velfærdsstatens_grænser" in jp_signals
-    ):
-        score += 20
-        reasons.append("Frit valg i velfærdsstaten")
-
-    # Begræns score til 100 og fjern dubletter i begrundelser
-    score = min(score, 100)
+    # Begræns til 0-100 og fjern dubletter
+    score = max(0, min(score, 100))
     deduped_reasons = []
     for reason in reasons:
         if reason not in deduped_reasons:
@@ -948,18 +934,13 @@ MICRO_TOPIC_PATTERNS = {
         "sprøjteforbud",
         "forbrugere",
     ],
-    "løkke_og_regeringsspil": [
-        "løkke",
-        "vlak",
-        "regering",
-        "regeringsforhandling",
-        "ministerpost",
-        "blå",
-        "røde",
-        "kongelig undersøger",
-    ],
     "ai_og_arbejdsmarked": [
         "ai",
+        "ai-",
+        "kunstig intelligens",
+        "kunstig",
+        "chatgpt",
+        "sprogmodel",
         "arbejdsmarked",
         "teknologi",
         "lønninger",
@@ -985,15 +966,6 @@ MICRO_TOPIC_PATTERNS = {
         "hård udlændingepolitik",
         "rettigheder",
     ],
-    "håndtryk_ligestilling_og_religion": [
-        "håndtryk",
-        "kvinder",
-        "mænd",
-        "fundamentalistisk",
-        "tro",
-        "ligestilling",
-        "loven",
-    ],
     "fagbevægelse_og_medlemskrise": [
         "fagbevægelse",
         "fagforening",
@@ -1001,43 +973,12 @@ MICRO_TOPIC_PATTERNS = {
         "hovedorganisationer",
         "arbejdsmarked",
     ],
-    "pædagogfaget_og_rekruttering": [
-        "pædagog",
-        "dagtilbudsleder",
-        "rekruttering",
-        "belastningsfortælling",
-        "faget",
-    ],
-    "medier_politikere_og_offentlighed": [
-        "medier",
-        "politikerne",
-        "kritiske medier",
-        "journalistisk",
-        "offentlighed",
-        "spin",
-        "sociale medier",
-    ],
     "grønland_og_rigsfællesskab": [
         "grønland",
         "grønlands",
         "arktis",
         "rigsfællesskab",
         "selvstændighed",
-        "palæstina",
-    ],
-    "kina_taiwan_og_europa": [
-        "kina",
-        "taiwan",
-        "europa",
-        "invasion",
-        "sikkerhedsrisiko",
-        "beijing",
-    ],
-    "havvind_modstand": [
-        "havvind",
-        "vindmølle",
-        "støj",
-        "naboer",
     ],
     "ulvedebat": [
         "ulv",
@@ -1045,23 +986,126 @@ MICRO_TOPIC_PATTERNS = {
         "landmænd",
         "hegn",
     ],
-    "lokal_infrastruktur_og_landdistrikter": [
-        "jernbane",
-        "landdistrikter",
-        "nordjylland",
-        "egholm",
-        "trafiksikkerhed",
-        "storbyen",
+    "arv_og_arveafgift": [
+        "arv",
+        "arveafgift",
+        "arveafgifter",
+        "testamente",
+        "boafgift",
+        "generationsskifte",
+        "arvinger",
     ],
-    "skat_afgifter_og_bilister": [
+    "land_og_by": [
+        "landdistrikter",
+        "udkantsdanmark",
+        "landsbyerne",
+        "provinsen",
+        "centralisering",
+        "affolkning",
+        "udkanten",
+    ],
+    "folkeskolen_og_faglighed": [
+        "folkeskole",
+        "folkeskolen",
+        "faglighed",
+        "karakterer",
+        "lærere",
+        "læseindlæring",
+        "matematik",
+    ],
+    "boligkrise_og_lokalplaner": [
+        "boligkrise",
+        "boligmangel",
+        "lokalplan",
+        "boligpriser",
+        "lejeboliger",
+        "almene boliger",
+        "huslejer",
+    ],
+    "energi_og_forsyning": [
+        "el-priser",
+        "fjernvarme",
+        "forsyning",
+        "vindenergi",
+        "solceller",
+        "energiselskaber",
+        "energipriser",
+    ],
+    "asbestforbud_og_boligejere": [
+        "asbest",
+        "asbestforbud",
+        "boligejere",
+        "renovering",
+        "husejere",
+        "eternit",
+    ],
+    "lobbyisme_og_demokrati": [
+        "lobbyisme",
+        "lobbyister",
+        "interesseorganisationer",
+        "demokrati",
+        "magt",
+        "gennemsigtighed",
+        "indflydelse",
+    ],
+    "ældreplejen_og_kommuner": [
+        "ældrepleje",
+        "hjemmehjælp",
+        "plejecentre",
+        "sosu",
+        "normeringer",
+        "ældreområdet",
+        "ældre",
+        "plejehjem",
+        "ældrebolig",
+    ],
+    "psykiatri_og_unge": [
+        "psykiatri",
+        "psykisk",
+        "angst",
+        "depression",
+        "ventelister",
+        "mistrivsel",
+        "unge",
+    ],
+    "integration_og_danskhed": [
+        "integration",
+        "danskhed",
+        "parallelsamfund",
+        "dansk kultur",
+        "dansk",
+        "danskhed",
+        "muslimer",
+        "islam",
+        "værdier",
+        "indvandrere",
+        "flygtninge",
+        "sprogkrav",
+    ],
+    "erhvervsliv_og_iværksættere": [
+        "iværksætteri",
+        "iværksættere",
+        "virksomheder",
+        "virksomhed",
+        "erhvervsliv",
+        "erhverv",
+        "startup",
+        "konkurrenceevne",
+        "regulering",
+        "vækst",
+    ],
+    "skat_og_afgifter": [
         "skat",
+        "skatter",
+        "skattelettelse",
+        "skattelettelser",
+        "skattereform",
         "afgift",
         "afgifter",
         "benzin",
         "diesel",
-        "bilister",
-        "trængsel",
         "formueskat",
+        "beskatning",
     ],
 }
 
@@ -1082,7 +1126,16 @@ def detect_micro_topics(title: str, deck: str = "") -> list[dict]:
             "drikkevand_og_landbrug",
             "retssikkerhed_og_udvisning",
             "fagbevægelse_og_medlemskrise",
-            "pædagogfaget_og_rekruttering",
+            "ulvedebat",
+            "arv_og_arveafgift",
+            "asbestforbud_og_boligejere",
+            "psykiatri_og_unge",
+            "ældreplejen_og_kommuner",
+            "lobbyisme_og_demokrati",
+            "ai_og_arbejdsmarked",
+            "grønland_og_rigsfællesskab",
+            "boligkrise_og_lokalplaner",
+            "energi_og_forsyning",
         }
 
         if len(hits) >= 2 or (topic_name in strong_single_hit_topics and len(hits) >= 1):
