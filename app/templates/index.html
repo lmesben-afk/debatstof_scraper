@@ -63,6 +63,7 @@
         <tr>
           <th class="col-score">Score</th>
           <th class="col-medie">Medie</th>
+          <th class="col-dato">Dato</th>
           <th class="col-rubrik">Rubrik</th>
           <th class="col-emner">Emner</th>
           <th class="col-star">★</th>
@@ -83,6 +84,8 @@
           </td>
 
           <td class="col-medie">{{ article.medie }}</td>
+
+          <td class="col-dato">{{ article.pub_dato or '—' }}</td>
 
           <td class="col-rubrik">
             <a href="/open?url={{ article.url | urlencode }}"

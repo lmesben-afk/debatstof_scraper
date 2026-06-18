@@ -12,6 +12,37 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 
+_DATE_RE = None
+
+
+def _politiken_date_re(re_module):
+    global _DATE_RE
+    if _DATE_RE is None:
+        _DATE_RE = re_module.compile(
+            r"\b(\d{1,2})\.\s+([A-ZÆØÅ][a-zæøå]+)\s+(\d{4}),\s+\d{1,2}\.\d{2}\b",
+            re_module.IGNORECASE,
+        )
+    return _DATE_RE
+
+
+DANISH_MONTH_MAP = {
+    "januar": "01", "februar": "02", "marts": "03", "april": "04",
+    "maj": "05", "juni": "06", "juli": "07", "august": "08",
+    "september": "09", "oktober": "10", "november": "11", "december": "12",
+}
+
+
+def extract_politiken_date(card_text: str, re_module) -> str:
+    m = _politiken_date_re(re_module).search(card_text)
+    if not m:
+        return ""
+    day, month_name, year = m.group(1), m.group(2).lower(), m.group(3)
+    month = DANISH_MONTH_MAP.get(month_name)
+    if not month:
+        return ""
+    return f"{year}-{month}-{int(day):02d}"
+
+
 def politiken_title_is_navigation(title: str, helpers) -> bool:
     value = helpers["normalize_label_text"](title)
     navigation_titles = {
@@ -184,6 +215,7 @@ def scrape_politiken_direct(client, source, show_urls: bool = False, limit: Opti
                         break
 
         card_text = card.get_text(" ", strip=True)
+        card_date = extract_politiken_date(card_text, helpers["re"])
 
         label = helpers["politiken_card_label"](card)
         debate_type = helpers["politiken_label_to_debate_type"](label)
@@ -238,7 +270,7 @@ def scrape_politiken_direct(client, source, show_urls: bool = False, limit: Opti
             deck = clean_politiken_deck(card_text, title, label, helpers)
             item = DebateItem(
                 discovered_at=dt.datetime.now(dt.timezone.utc).isoformat(),
-                published_at="",
+                published_at=card_date,
                 media=source.name,
                 media_type=source.media_type,
                 region=source.region,
@@ -253,6 +285,10 @@ def scrape_politiken_direct(client, source, show_urls: bool = False, limit: Opti
         else:
             # Behold typen fra debatforsiden/URL'en.
             item.debate_type = debate_type
+
+            # Brug kortdato som fallback hvis artikelsiden ikke gav en dato.
+            if not item.published_at and card_date:
+                item.published_at = card_date
 
             # Vigtigt:
             # Politiken kan give afkortet rubrik fra artikelsidens metadata.
