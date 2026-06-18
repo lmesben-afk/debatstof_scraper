@@ -762,6 +762,12 @@ CONFLICT_KEYWORDS = [
     "kritik", "kritiserer", "angreb", "taber", "svækker", "krise", "skandale",
     "konflikt", "oprør", "fejl", "bluff", "pres", "advarer", "raser", "opgør",
     "fyring", "afviser", "formynderi", "kontrol", "tvang", "forbud",
+    "problem", "udfordring", "svigt", "svigter", "forkert",
+    "farligt", "farlig", "skader", "ødelægger", "taber",
+    "tåbelig", "illusion", "løgn", "vildledning", "uacceptabelt",
+    "uretfærdigt", "uværdigt", "mislykket", "fiasko", "katastrofe",
+    "bekymrende", "alvorligt", "galt", "galer", "forrådt",
+    "svigtet", "nedskæringer", "sparer", "lukker", "nedlægger",
 ]
 
 JP_VALUE_KEYWORDS = {
@@ -864,8 +870,10 @@ def calculate_story_potential(item: DebateItem) -> tuple[int, list[str]]:
             reasons.append(f"JP-kerneværdi: {', '.join(hits)}")
 
     # Faktor 2: Navngiven aktør (+15)
-    has_entity = any(names for names in entities.values())
-    if has_entity:
+    if item.author and item.author.strip():
+        score += 15
+        reasons.append("Navngiven aktør")
+    elif entities.get("personer") or entities.get("organisationer"):
         score += 15
         reasons.append("Navngiven aktør")
 
@@ -888,7 +896,7 @@ def calculate_story_potential(item: DebateItem) -> tuple[int, list[str]]:
         reasons.append("Konflikt/uenighed")
 
     # Faktor 6: Debatformat (+10)
-    debate_formats = {"kronik", "kommentar", "læserbrev"}
+    debate_formats = {"kronik", "kommentar", "læserbrev", "debat", "analyse", "leder"}
     if item.debate_type and item.debate_type.lower() in debate_formats:
         score += 10
         reasons.append(f"Format: {item.debate_type}")
