@@ -56,7 +56,7 @@ ON CONFLICT(artikel_id) DO UPDATE SET
     debat_type  = excluded.debat_type,
     fundet_via  = excluded.fundet_via,
     temaer      = excluded.temaer,
-    mikroemner  = excluded.mikroemner,
+    mikroemner  = COALESCE(NULLIF(excluded.mikroemner, '[]'), mikroemner),
     entiteter   = excluded.entiteter,
     jp_signaler = excluded.jp_signaler,
     story_score = excluded.story_score,
