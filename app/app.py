@@ -146,8 +146,26 @@ def update_feedback_in_sheet(url: str, score: str, label: str) -> None:
 
 
 MICRO_TOPIC_LABELS = {
-    "frit_valg_på_plejehjem": "Frit valg på plejehjem",
-    "drikkevand_og_landbrug": "Drikkevand og landbrug",
+    "frit_valg_og_privatisering":    "Frit valg og privatisering",
+    "ældreplejen_og_kommuner":        "Ældrepleje og kommuner",
+    "psykiatri_og_mental_sundhed":    "Psykiatri og mental sundhed",
+    "unges_trivsel_og_skærme":        "Unges trivsel og skærme",
+    "drikkevand_og_landbrug":         "Drikkevand og landbrug",
+    "ai_og_arbejdsmarked":            "AI og arbejdsmarked",
+    "retssikkerhed_og_udvisning":     "Retssikkerhed og udvisning",
+    "fagbevægelse_og_medlemskrise":   "Fagbevægelse og medlemskrise",
+    "grønland_og_rigsfællesskab":     "Grønland og rigsfællesskab",
+    "ulvedebat":                       "Ulvedebat",
+    "arv_og_arveafgift":              "Arv og arveafgift",
+    "land_og_by":                      "Land og by",
+    "folkeskolen_og_faglighed":       "Folkeskolen og faglighed",
+    "boligkrise_og_lokalplaner":      "Boligkrise og lokalplaner",
+    "energi_og_forsyning":            "Energi og forsyning",
+    "asbestforbud_og_boligejere":     "Asbestforbud og boligejere",
+    "lobbyisme_og_demokrati":         "Lobbyisme og demokrati",
+    "integration_og_danskhed":        "Integration og danskhed",
+    "erhvervsliv_og_iværksættere":    "Erhvervsliv og iværksættere",
+    "skat_og_afgifter":               "Skat og afgifter",
     "håndtryk_ligestilling_og_religion": "Håndtryk, ligestilling og religion",
 }
 
