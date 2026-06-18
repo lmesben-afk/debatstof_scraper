@@ -65,6 +65,18 @@ ON CONFLICT(artikel_id) DO UPDATE SET
 """
 
 
+CREATE_FEEDBACK_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS feedback (
+    url             TEXT PRIMARY KEY,
+    interesting     INTEGER NOT NULL DEFAULT 0,
+    opened          INTEGER NOT NULL DEFAULT 0,
+    feedback_score  INTEGER NOT NULL DEFAULT 0,
+    feedback_label  TEXT NOT NULL DEFAULT '',
+    opdateret_kl    TEXT NOT NULL
+);
+"""
+
+
 def _migrate_schema(conn: sqlite3.Connection) -> None:
     """Tilføjer nye kolonner til eksisterende databaser uden at slette data."""
     try:
@@ -72,6 +84,107 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
     except sqlite3.OperationalError:
         pass  # Kolonnen eksisterer allerede
     conn.commit()
+
+
+def _ensure_feedback_table(conn: sqlite3.Connection) -> None:
+    conn.execute(CREATE_FEEDBACK_TABLE_SQL)
+    conn.commit()
+
+
+def save_feedback_to_db(
+    url: str,
+    interesting: int,
+    opened: int,
+    feedback_score: int,
+    feedback_label: str,
+) -> None:
+    import datetime as dt
+    db_path = get_db_path()
+    if not db_path.exists():
+        return
+    try:
+        with sqlite3.connect(str(db_path)) as conn:
+            _ensure_feedback_table(conn)
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO feedback
+                    (url, interesting, opened, feedback_score, feedback_label, opdateret_kl)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    url,
+                    int(interesting),
+                    int(opened),
+                    int(feedback_score),
+                    feedback_label or "",
+                    dt.datetime.now(dt.timezone.utc).isoformat(),
+                ),
+            )
+    except Exception as exc:
+        print(f"[WARN] save_feedback_to_db fejlede: {exc}")
+
+
+def get_all_feedback_from_db() -> dict:
+    """
+    Returnerer feedback-dict med url som nøgle — samme format som load_feedback().
+
+    Kører automatisk migration fra feedback.json første gang tabellen er tom.
+    """
+    import datetime as dt
+    from pathlib import Path as _Path
+
+    db_path = get_db_path()
+    if not db_path.exists():
+        return {}
+
+    try:
+        with sqlite3.connect(str(db_path)) as conn:
+            _ensure_feedback_table(conn)
+            rows = conn.execute(
+                "SELECT url, interesting, opened, feedback_score, feedback_label FROM feedback"
+            ).fetchall()
+    except Exception as exc:
+        print(f"[WARN] get_all_feedback_from_db fejlede: {exc}")
+        return {}
+
+    if rows:
+        return {
+            row[0]: {
+                "interesting": bool(row[1]),
+                "opened": bool(row[2]),
+                "feedback_score": str(row[3]),
+                "feedback_label": row[4],
+            }
+            for row in rows
+        }
+
+    # Tabel er tom — forsøg migration fra feedback.json
+    feedback_json = (
+        _Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus"
+              r"\Jyllands-Posten\Scrapere\Fælles-data") / "feedback.json"
+    )
+    if not feedback_json.exists():
+        return {}
+
+    try:
+        import json as _json
+        data = _json.loads(feedback_json.read_text(encoding="utf-8"))
+        migrated = 0
+        for url, item in data.items():
+            save_feedback_to_db(
+                url=url,
+                interesting=int(bool(item.get("interesting", False))),
+                opened=int(bool(item.get("opened", False))),
+                feedback_score=int(item.get("feedback_score") or 0),
+                feedback_label=item.get("feedback_label") or "",
+            )
+            migrated += 1
+        if migrated:
+            print(f"[INFO] Migrerede {migrated} feedback-poster fra feedback.json til SQLite")
+        return data
+    except Exception as exc:
+        print(f"[WARN] Migration fra feedback.json fejlede: {exc}")
+        return {}
 
 
 def get_db_path() -> Path:

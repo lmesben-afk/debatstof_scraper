@@ -9,7 +9,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from flask import Flask, render_template, request, redirect
 import os
 import gspread
-from db.database import get_db_path
+from db.database import get_db_path, save_feedback_to_db, get_all_feedback_from_db
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -476,7 +476,9 @@ def index():
     if data is None:
         print("[WARN] SQLite utilgængelig — falder tilbage til articles.json")
         data = load_data()
-    feedback = load_feedback()
+    feedback = get_all_feedback_from_db()
+    if not feedback:
+        feedback = load_feedback()
 
     raw_articles = data.get("articles", [])
     feedback_signals = build_feedback_signals(raw_articles, feedback)
@@ -522,6 +524,13 @@ def mark_open():
 
     feedback[url] = item
     save_feedback(feedback)
+    save_feedback_to_db(
+        url=url,
+        interesting=int(bool(item.get("interesting", False))),
+        opened=int(bool(item.get("opened", False))),
+        feedback_score=int(item.get("feedback_score") or 0),
+        feedback_label=item.get("feedback_label") or "",
+    )
     update_feedback_in_sheet(url, item.get("feedback_score", "1"), item.get("feedback_label", "åbnet"))
 
     return redirect(url)
@@ -550,6 +559,13 @@ def mark_interesting():
 
     feedback[url] = item
     save_feedback(feedback)
+    save_feedback_to_db(
+        url=url,
+        interesting=int(bool(item.get("interesting", False))),
+        opened=int(bool(item.get("opened", False))),
+        feedback_score=int(item.get("feedback_score") or 0),
+        feedback_label=item.get("feedback_label") or "",
+    )
     update_feedback_in_sheet(url, item.get("feedback_score", "0"), item.get("feedback_label", "ikke_åbnet"))
 
     return redirect("/")
