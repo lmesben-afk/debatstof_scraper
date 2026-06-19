@@ -169,6 +169,11 @@ MICRO_TOPIC_LABELS = {
     "erhvervsliv_og_iværksættere":    "Erhvervsliv og iværksættere",
     "skat_og_afgifter":               "Skat og afgifter",
     "håndtryk_ligestilling_og_religion": "Håndtryk, ligestilling og religion",
+    "sundhedsvæsen_og_patientrettigheder": "Sundhedsvæsen og patientrettigheder",
+    "trafik_og_infrastruktur":        "Trafik og infrastruktur",
+    "udenrigspolitik_og_sikkerhed":   "Udenrigspolitik og sikkerhed",
+    "socialpolitik_og_fattigdom":     "Socialpolitik og fattigdom",
+    "ytringsfrihed_og_medier":        "Ytringsfrihed og medier",
 }
 
 
