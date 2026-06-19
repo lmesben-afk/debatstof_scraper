@@ -19,7 +19,6 @@ from core.utils import clean_text, clean_url, canonicalize_url_for_dedupe, artic
 
 
 
-import gspread
 import httpx
 import yaml
 from bs4 import BeautifulSoup
@@ -1686,510 +1685,11 @@ def load_env_file(path: str = ".env") -> None:
             os.environ.setdefault(key.strip(), value.strip())
 
 
-def connect_spreadsheet():
-    """
-    Åbner hele Google Sheet-filen.
-
-    Bruger kun den faste config-mappe:
-    C:/Users/Esben.L.Mikkelsen/OneDrive - JP Politikens Hus/Jyllands-Posten/Scrapere/Config-filer
-    """
-    sheet_name = os.getenv("GOOGLE_SHEET_NAME")
-    credentials_file = os.getenv("GOOGLE_CREDENTIALS_FILE")
-
-    if not sheet_name:
-        raise RuntimeError(f"GOOGLE_SHEET_NAME mangler i {CONFIG_DIR / '.env'}")
-
-    if not credentials_file:
-        credentials_file = str(CONFIG_DIR / "credentials.json")
-
-    credentials_path = Path(credentials_file)
-    if not credentials_path.is_absolute():
-        credentials_path = CONFIG_DIR / credentials_file
-
-    if not credentials_path.exists():
-        raise RuntimeError(f"Fandt ikke credentials.json: {credentials_path}")
-
-    gc = gspread.service_account(filename=str(credentials_path))
-    return gc.open(sheet_name)
-
-
-def get_or_create_worksheet(spreadsheet, title: str, rows: int = 1000, cols: int = 20):
-    """
-    Finder et faneblad. Opretter det, hvis det ikke findes.
-    """
-    try:
-        return spreadsheet.worksheet(title)
-    except Exception:
-        return spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
-
-
-def append_log_row(status: str, fundne_artikler: int, nye_artikler: int, dubletter: int, fejl: str = "") -> None:
-    """
-    Skriver én række i log-fanebladet.
-    Loggen er vigtig, når scraperen senere skal køre automatisk.
-    """
-    try:
-        spreadsheet = connect_spreadsheet()
-        log_ws = get_or_create_worksheet(spreadsheet, "log", rows=1000, cols=6)
-
-        header = [
-            "kørsel_tidspunkt",
-            "status",
-            "fundne_artikler",
-            "nye_artikler",
-            "dubletter",
-            "fejl",
-        ]
-
-        first_row = log_ws.row_values(1)
-        if first_row != header:
-            log_ws.update(values=[header], range_name="A1:F1")
-            try:
-                log_ws.freeze(rows=1)
-            except Exception:
-                pass
-
-        log_ws.append_row([
-            dt.datetime.now(dt.timezone.utc).isoformat(),
-            status,
-            fundne_artikler,
-            nye_artikler,
-            dubletter,
-            fejl,
-        ], value_input_option="USER_ENTERED")
-
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke skrive til log-ark: {exc}")
-
-
-def connect_sheet():
-    spreadsheet = connect_spreadsheet()
-    return spreadsheet.sheet1
-
-def ensure_sheet_header(ws):
-    """
-    Sikrer danske kolonneoverskrifter.
-    Overskriftsrækken sættes hver gang, så gamle engelske overskrifter ikke vender tilbage.
-    """
-    header = [
-        "fundet_tidspunkt",
-        "udgivelsestidspunkt",
-        "medie",
-        "medietype",
-        "region",
-        "rubrik",
-        "manchet",
-        "forfatter",
-        "debat_type",
-        "url",
-        "fundet_via",
-        "status",
-        "ny_i_denne_kørsel",
-        "artikel_id",
-        "debat_type_standard",
-        "temaer",
-        "entiteter",
-        "historiepotentiale_score",
-        "historiepotentiale_begrundelse",
-        "mikroemner",
-        "feedback_score",
-        "feedback_label",
-    ]
-    ws.update(values=[header], range_name="A1:V1")
-
-    # Frys overskriftsrækken, så kolonnenavne altid er synlige.
-    try:
-        ws.freeze(rows=1)
-    except Exception:
-        pass
-
-def extract_url_from_sheet_cell(value: str) -> str:
-    """
-    Henter URL ud af enten rå URL eller HYPERLINK-formel.
-    Eksempel:
-    =HYPERLINK("https://example.dk", "Læs artikel")
-    """
-    value = str(value or "").strip()
-
-    if value.upper().startswith("=HYPERLINK("):
-        first_quote = value.find('"')
-        second_quote = value.find('"', first_quote + 1)
-        if first_quote != -1 and second_quote != -1:
-            return value[first_quote + 1:second_quote]
-
-    return value
-
-
-def existing_urls(ws) -> set:
-    """
-    Læser eksisterende URL'er fra Google Sheet.
-    Bruger formlavisning, så vi kan læse URL'en bag 'Læs artikel'.
-    """
-    try:
-        values = ws.get("J2:J", value_render_option="FORMULA")
-    except TypeError:
-        values = ws.get("J2:J")
-
-    urls = set()
-    for row in values:
-        if not row:
-            continue
-        raw = row[0]
-        url = extract_url_from_sheet_cell(raw)
-        if url:
-            urls.add(canonicalize_url_for_dedupe(url))
-
-    return urls
-
-
-def sheet_hyperlink(url: str, text: str = "Læs artikel") -> str:
-    """
-    Returnerer en Google Sheets HYPERLINK-formel.
-    """
-    safe_url = str(url).replace('"', '""')
-    safe_text = str(text).replace('"', '""')
-    return f'=HYPERLINK("{safe_url}"; "{safe_text}")'
-
-
-
-def format_sheet_columns(ws) -> None:
-    """
-    Gør Google Sheet mere læsbart.
-    Kolonnebredderne er faste og forsigtige, så vi ikke ændrer data.
-    """
-    try:
-        # Kolonneindeks er 0-baserede i batch_update:
-        # A=0, B=1, C=2 osv.
-        requests = [
-            # fundet_tidspunkt + udgivelsestidspunkt
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 0, "endIndex": 2},
-                "properties": {"pixelSize": 155},
-                "fields": "pixelSize"
-            }},
-            # medie, medietype, region
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 2, "endIndex": 5},
-                "properties": {"pixelSize": 120},
-                "fields": "pixelSize"
-            }},
-            # rubrik
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 5, "endIndex": 6},
-                "properties": {"pixelSize": 420},
-                "fields": "pixelSize"
-            }},
-            # manchet
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 6, "endIndex": 7},
-                "properties": {"pixelSize": 520},
-                "fields": "pixelSize"
-            }},
-            # forfatter, debat_type
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 7, "endIndex": 9},
-                "properties": {"pixelSize": 150},
-                "fields": "pixelSize"
-            }},
-            # url/Læs artikel
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 9, "endIndex": 10},
-                "properties": {"pixelSize": 110},
-                "fields": "pixelSize"
-            }},
-            # fundet_via, status
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 10, "endIndex": 12},
-                "properties": {"pixelSize": 110},
-                "fields": "pixelSize"
-            }},
-            # ny_i_denne_kørsel
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 12, "endIndex": 13},
-                "properties": {"pixelSize": 130},
-                "fields": "pixelSize"
-            }},
-            # artikel_id
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 13, "endIndex": 14},
-                "properties": {"pixelSize": 135},
-                "fields": "pixelSize"
-            }},
-            # debat_type_standard
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 14, "endIndex": 15},
-                "properties": {"pixelSize": 150},
-                "fields": "pixelSize"
-            }},
-            # temaer
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 15, "endIndex": 16},
-                "properties": {"pixelSize": 220},
-                "fields": "pixelSize"
-            }},
-            # entiteter
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 16, "endIndex": 17},
-                "properties": {"pixelSize": 320},
-                "fields": "pixelSize"
-            }},
-        ]
-        # Feedback-kolonner
-        requests.extend([
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 20, "endIndex": 21},
-                "properties": {"pixelSize": 110},
-                "fields": "pixelSize"
-            }},
-            {"updateDimensionProperties": {
-                "range": {"sheetId": ws.id, "dimension": "COLUMNS", "startIndex": 21, "endIndex": 22},
-                "properties": {"pixelSize": 130},
-                "fields": "pixelSize"
-            }},
-        ])
-
-        ws.spreadsheet.batch_update({"requests": requests})
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke sætte kolonnebredder: {exc}")
-
-
-
-def column_number_to_letters(number: int) -> str:
-    """
-    1 -> A, 2 -> B, 27 -> AA
-    """
-    letters = ""
-    while number:
-        number, remainder = divmod(number - 1, 26)
-        letters = chr(65 + remainder) + letters
-    return letters
-
-
-def column_index_from_header(header: List[str], column_name: str) -> Optional[int]:
-    """
-    Finder 1-baseret kolonneindeks ud fra headernavn.
-    """
-    try:
-        normalized = [str(h or "").strip() for h in header]
-        return normalized.index(column_name) + 1
-    except ValueError:
-        return None
-
-
-def load_sheet_sort_settings() -> Dict[str, Any]:
-    """
-    Læser sortering fra config/sheet_rules.yaml.
-    """
-    default = {"column_name": "udgivelsestidspunkt", "descending": True}
-    path = Path(__file__).resolve().parent / "config" / "sheet_rules.yaml"
-
-    try:
-        if not path.exists():
-            return default
-
-        with path.open("r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
-
-        sort = data.get("sort", {}) or {}
-
-        return {
-            "column_name": sort.get("column_name", default["column_name"]),
-            "descending": bool(sort.get("descending", default["descending"])),
-        }
-
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke læse sheet_rules.yaml: {exc}")
-        return default
-
-
-def sort_sheet_by_datetime(ws) -> None:
-    """
-    Sorterer Google Sheet efter et kolonnenavn i headeren.
-
-    Tidligere brugte den et fast område A2:V.
-    Det kunne fejle, hvis arket havde flere/færre kolonner.
-    """
-    try:
-        sort_settings = load_sheet_sort_settings()
-        column_name = sort_settings["column_name"]
-        descending = sort_settings["descending"]
-
-        header = ws.row_values(1)
-        sort_col = column_index_from_header(header, column_name)
-
-        if not sort_col:
-            print(f"[WARN] Kunne ikke sortere arket: fandt ikke kolonnen '{column_name}'")
-            return
-
-        values = ws.get_all_values()
-        row_count = max(len(values), 2)
-        col_count = max(len(header), 1)
-
-        sort_order = "des" if descending else "asc"
-        sort_range = f"A2:{column_number_to_letters(col_count)}{row_count}"
-
-        ws.sort(
-            (sort_col, sort_order),
-            range=sort_range,
-        )
-
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke sortere arket: {exc}")
-
-
-
-def clear_new_flags(ws) -> None:
-    """
-    Nulstiller 'ny_i_denne_kørsel' for gamle rækker, før nye rækker skrives.
-    """
-    try:
-        existing_rows = len(ws.get_all_values())
-        if existing_rows >= 2:
-            blanks = [[""] for _ in range(existing_rows - 1)]
-            ws.update(values=blanks, range_name=f"M2:M{existing_rows}")
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke nulstille ny-markeringer: {exc}")
-
-
-def highlight_new_rows(ws) -> None:
-    """
-    Farvemarkerer rækker, hvor kolonnen 'ny_i_denne_kørsel' er JA.
-    Rydder først farve på dataområdet, så gamle markeringer ikke bliver hængende.
-    """
-    try:
-        values = ws.get_all_values()
-        row_count = max(len(values), 2)
-
-        requests = []
-
-        # Ryd baggrundsfarve på alle datarækker A:M.
-        requests.append({
-            "repeatCell": {
-                "range": {
-                    "sheetId": ws.id,
-                    "startRowIndex": 1,
-                    "endRowIndex": row_count,
-                    "startColumnIndex": 0,
-                    "endColumnIndex": 22,
-                },
-                "cell": {
-                    "userEnteredFormat": {
-                        "backgroundColor": {
-                            "red": 1,
-                            "green": 1,
-                            "blue": 1,
-                        }
-                    }
-                },
-                "fields": "userEnteredFormat.backgroundColor",
-            }
-        })
-
-        # Marker nye rækker svagt grønt.
-        for idx, row in enumerate(values[1:], start=2):
-            flag = row[12] if len(row) >= 13 else ""
-            if flag == "JA":
-                requests.append({
-                    "repeatCell": {
-                        "range": {
-                            "sheetId": ws.id,
-                            "startRowIndex": idx - 1,
-                            "endRowIndex": idx,
-                            "startColumnIndex": 0,
-                            "endColumnIndex": 22,
-                        },
-                        "cell": {
-                            "userEnteredFormat": {
-                                "backgroundColor": {
-                                    "red": 0.85,
-                                    "green": 0.95,
-                                    "blue": 0.85,
-                                }
-                            }
-                        },
-                        "fields": "userEnteredFormat.backgroundColor",
-                    }
-                })
-
-        if requests:
-            ws.spreadsheet.batch_update({"requests": requests})
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke farvemarkere nye rækker: {exc}")
-
-
-
 SHARED_DATA_DIR = Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Fælles-data")
 SHARED_FEEDBACK_FILE = SHARED_DATA_DIR / "feedback.json"
 
 
-def export_feedback_from_sheet(ws) -> None:
-    """
-    Eksporterer feedback fra Google Sheet til fælles feedback.json.
-    """
-    try:
-        SHARED_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-        values = ws.get_all_values()
-        if not values:
-            return
-
-        header = values[0]
-        rows = values[1:]
-
-        def col(name):
-            try:
-                return header.index(name)
-            except ValueError:
-                return -1
-
-        url_col = col("url")
-        score_col = col("feedback_score")
-        label_col = col("feedback_label")
-
-        if url_col == -1:
-            return
-
-        feedback = {}
-
-        for row in rows:
-            if len(row) <= url_col:
-                continue
-
-            raw_url = row[url_col]
-            url = extract_url_from_sheet_cell(raw_url)
-
-            if not url:
-                continue
-
-            score = row[score_col].strip() if score_col != -1 and len(row) > score_col else ""
-            label = row[label_col].strip() if label_col != -1 and len(row) > label_col else ""
-
-            opened = score in ["1", "2"] or label in ["åbnet", "aabnet", "interessant"]
-            interesting = score == "2" or label == "interessant"
-
-            if opened or interesting:
-                feedback[url] = {
-                    "opened": opened,
-                    "interesting": interesting,
-                    "feedback_score": score,
-                    "feedback_label": label,
-                }
-
-        with SHARED_FEEDBACK_FILE.open("w", encoding="utf-8") as f:
-            json.dump(feedback, f, ensure_ascii=False, indent=2)
-
-        print(f"Skrev feedback til fælles fil: {SHARED_FEEDBACK_FILE}")
-
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke eksportere feedback fra Google Sheet: {exc}")
-
-
-
 def load_shared_feedback() -> dict:
-    """
-    Læser feedback fra fælles feedback.json.
-    Bruges til at synkronisere app-feedback tilbage til Google Sheet.
-    """
     try:
         if not SHARED_FEEDBACK_FILE.exists():
             return {}
@@ -2198,152 +1698,6 @@ def load_shared_feedback() -> dict:
     except Exception as exc:
         print(f"[WARN] Kunne ikke læse fælles feedback-fil: {exc}")
         return {}
-
-
-def sync_feedback_to_sheet(ws) -> None:
-    """
-    Skriver feedback_score og feedback_label fra fælles feedback.json tilbage til Google Sheet.
-
-    Feedbackmodel:
-    0 / ikke_åbnet
-    1 / åbnet
-    2 / interessant
-    """
-    try:
-        feedback = load_shared_feedback()
-        if not feedback:
-            return
-
-        values = ws.get_all_values()
-        if not values:
-            return
-
-        header = values[0]
-        rows = values[1:]
-
-        def col(name):
-            try:
-                return header.index(name)
-            except ValueError:
-                return -1
-
-        url_col = col("url")
-        score_col = col("feedback_score")
-        label_col = col("feedback_label")
-
-        if url_col == -1 or score_col == -1 or label_col == -1:
-            print("[WARN] Kan ikke synkronisere feedback: mangler url/feedback_score/feedback_label-kolonner")
-            return
-
-        score_updates = []
-        label_updates = []
-
-        for row in rows:
-            if len(row) <= url_col:
-                score_updates.append([""])
-                label_updates.append([""])
-                continue
-
-            raw_url = row[url_col]
-            url = extract_url_from_sheet_cell(raw_url)
-            item = feedback.get(url, {})
-
-            if item.get("interesting"):
-                score_updates.append(["2"])
-                label_updates.append(["interessant"])
-            elif item.get("opened"):
-                score_updates.append(["1"])
-                label_updates.append(["åbnet"])
-            else:
-                score_updates.append(["0"])
-                label_updates.append(["ikke_åbnet"])
-
-        if rows:
-            # Kolonner er 1-baserede i A1-notation.
-            score_letter = chr(ord("A") + score_col)
-            label_letter = chr(ord("A") + label_col)
-
-            ws.update(
-                values=score_updates,
-                range_name=f"{score_letter}2:{score_letter}{len(rows)+1}",
-            )
-            ws.update(
-                values=label_updates,
-                range_name=f"{label_letter}2:{label_letter}{len(rows)+1}",
-            )
-
-        print("Synkroniserede feedback fra app til Google Sheet.")
-
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke synkronisere feedback til Google Sheet: {exc}")
-
-
-def append_items_to_sheet(items: List[DebateItem]) -> tuple[int, int, List[DebateItem]]:
-    """
-    Skriver kun nye artikler til Google Sheet.
-    Dubletter afgøres på URL uden tracking-parametre.
-    """
-    ws = connect_sheet()
-    ensure_sheet_header(ws)
-    format_sheet_columns(ws)
-    clear_new_flags(ws)
-
-    seen = existing_urls(ws)
-    new_items = []
-    skipped = 0
-
-    for item in items:
-        key = canonicalize_url_for_dedupe(item.url)
-        if key in seen:
-            skipped += 1
-            continue
-        seen.add(key)
-        new_items.append(item)
-
-    if not new_items:
-        highlight_new_rows(ws)
-        sync_feedback_to_sheet(ws)
-        export_feedback_from_sheet(ws)
-        print(f"Ingen nye rækker at skrive. Sprang {skipped} dubletter over.")
-        return 0, skipped, []
-
-    rows = [[
-        normalize_timestamp(item.discovered_at),
-        normalize_timestamp(item.published_at),
-        item.media,
-        item.media_type,
-        item.region,
-        item.title,
-        item.deck,
-        item.author,
-        item.debate_type,
-        sheet_hyperlink(item.url),
-        item.source_method,
-        item.status,
-        "JA",
-        article_id_from_url(item.url),
-        standardize_debate_type(item.debate_type),
-        themes_as_text(item.title, item.deck),
-        entities_as_text(item.title, item.deck),
-        calculate_story_potential(item)[0],
-        story_potential_reason_text(item),
-        micro_topics_as_text(item.title, item.deck),
-        "",
-        "",
-    ] for item in new_items]
-
-    ws.append_rows(rows, value_input_option="USER_ENTERED")
-
-    # Hold nyeste artikler øverst i arket.
-    sort_sheet_by_datetime(ws)
-
-    # Farvemarker nye artikler efter sortering.
-    highlight_new_rows(ws)
-
-    sync_feedback_to_sheet(ws)
-    export_feedback_from_sheet(ws)
-    print(f"Skrev {len(rows)} nye rækker til Google Sheet. Sprang {skipped} dubletter over.")
-    return len(rows), skipped, new_items
 
 
 
@@ -2787,45 +2141,54 @@ def run(dry_run: bool, limit_per_source: int, only: Optional[str], min_section_r
         print(f"\nDry run færdig. {len(items)} poster fundet.")
         return items
 
-    # SQLite skrives før Google Sheets, så artikler gemmes lokalt selv hvis Sheets fejler.
-    sqlite_ok = False
+    from db.database import write_items_to_sqlite, log_korsel
+
+    # Find nye artikler ved at sammenligne med eksisterende artikel_id'er i SQLite.
+    existing_ids: set = set()
     try:
-        from db.database import write_items_to_sqlite
+        import sqlite3 as _sqlite3
+        from db.database import get_db_path
+        db_path = get_db_path()
+        if db_path.exists():
+            with _sqlite3.connect(str(db_path)) as _conn:
+                rows = _conn.execute("SELECT artikel_id FROM artikler").fetchall()
+                existing_ids = {r[0] for r in rows}
+    except Exception:
+        pass
+
+    new_items = [i for i in items if article_id_from_url(i.url) not in existing_ids]
+    dubletter = len(items) - len(new_items)
+
+    try:
         write_items_to_sqlite([item_to_app_dict(i) for i in items])
-        sqlite_ok = True
     except Exception as db_exc:
         print(f"[ADVARSEL] SQLite-skrivning fejlede: {db_exc}")
-
-    try:
-        nye_artikler, dubletter, new_items = append_items_to_sheet(items)
-
-        if new_json_output:
-            write_new_items_to_json(new_items, new_json_output, source_status=source_status)
-
-        append_log_row(
-            status="OK",
-            fundne_artikler=len(items),
-            nye_artikler=nye_artikler,
-            dubletter=dubletter,
-            fejl="",
-        )
-    except Exception as exc:
-        append_log_row(
+        log_korsel(
             status="FEJL",
             fundne_artikler=len(items),
             nye_artikler=0,
-            dubletter=0,
-            fejl=str(exc),
+            dubletter=dubletter,
+            fejl=str(db_exc),
         )
         raise
 
-    if sqlite_ok:
-        try:
-            from rescore_db import rescore_all
-            print("\nKører rescore af alle artikler ...")
-            rescore_all()
-        except Exception as rescore_exc:
-            print(f"[WARN] Automatisk rescore fejlede: {rescore_exc}")
+    if new_json_output:
+        write_new_items_to_json(new_items, new_json_output, source_status=source_status)
+
+    log_korsel(
+        status="OK",
+        fundne_artikler=len(items),
+        nye_artikler=len(new_items),
+        dubletter=dubletter,
+        fejl="",
+    )
+
+    try:
+        from rescore_db import rescore_all
+        print("\nKører rescore af alle artikler ...")
+        rescore_all()
+    except Exception as rescore_exc:
+        print(f"[WARN] Automatisk rescore fejlede: {rescore_exc}")
 
     return items
 
@@ -2834,7 +2197,7 @@ def print_db_stats() -> None:
     Viser database-statistik og stopper. Kører ingen scraping.
     Læser kun fra databasen — skriver aldrig.
     """
-    from db.database import get_stats, get_count_by_source, get_recent_articles, get_duplicates
+    from db.database import get_stats, get_count_by_source, get_recent_articles, get_duplicates, get_recent_korsler
     from db.database import get_db_path
 
     db_path = get_db_path()
@@ -2873,6 +2236,23 @@ def print_db_stats() -> None:
     print(f"\n--- Dubletter på medie + rubrik: {len(mr_dupes)} ---")
     for medie, rubrik, antal in mr_dupes[:10]:
         print(f"  ({antal}x) {medie}: {rubrik[:60]}")
+
+    korsler = get_recent_korsler(limit=10)
+    print(f"\n--- Seneste {len(korsler)} kørsler ---")
+    if not korsler:
+        print("  Ingen kørselslogs endnu.")
+    else:
+        for k in korsler:
+            tidspunkt = (k.get("korsel_tidspunkt") or "")[:19].replace("T", " ")
+            status    = (k.get("status") or "").ljust(4)
+            fundet    = str(k.get("fundne_artikler") or 0).rjust(3)
+            nye       = str(k.get("nye_artikler")    or 0).rjust(3)
+            dubl      = str(k.get("dubletter")       or 0).rjust(3)
+            fejl      = k.get("fejl") or ""
+            linje     = f"  {tidspunkt}  {status}  fundet={fundet}  nye={nye}  dubl={dubl}"
+            if fejl:
+                linje += f"  fejl={fejl[:60]}"
+            print(linje)
 
     print()
 

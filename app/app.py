@@ -8,7 +8,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from flask import Flask, render_template, request, redirect
 import os
-import gspread
 from db.database import get_db_path, save_feedback_to_db, get_all_feedback_from_db
 
 
@@ -35,112 +34,6 @@ def load_env_file():
                 continue
             key, value = line.split("=", 1)
             os.environ.setdefault(key.strip(), value.strip())
-
-
-def connect_sheet():
-    load_env_file()
-
-    sheet_name = os.getenv("GOOGLE_SHEET_NAME")
-    credentials_file = os.getenv("GOOGLE_CREDENTIALS_FILE")
-
-    if not sheet_name:
-        print("[WARN] GOOGLE_SHEET_NAME mangler")
-        return None
-
-    if not credentials_file:
-        credentials_path = CONFIG_DIR / "credentials.json"
-    else:
-        credentials_path = Path(credentials_file)
-        if not credentials_path.is_absolute():
-            credentials_path = CONFIG_DIR / credentials_file
-
-    if not credentials_path.exists():
-        print(f"[WARN] Fandt ikke credentials.json: {credentials_path}")
-        return None
-
-    gc = gspread.service_account(filename=str(credentials_path))
-    spreadsheet = gc.open(sheet_name)
-    return spreadsheet.sheet1
-
-
-def extract_url_from_sheet_cell(value: str) -> str:
-    value = str(value or "").strip()
-
-    if value.upper().startswith("=HYPERLINK("):
-        first_quote = value.find('"')
-        second_quote = value.find('"', first_quote + 1)
-        if first_quote != -1 and second_quote != -1:
-            return value[first_quote + 1:second_quote]
-
-    return value
-
-
-def column_letter(index_zero_based: int) -> str:
-    number = index_zero_based + 1
-    letters = ""
-
-    while number:
-        number, remainder = divmod(number - 1, 26)
-        letters = chr(65 + remainder) + letters
-
-    return letters
-
-
-def update_feedback_in_sheet(url: str, score: str, label: str) -> None:
-    """
-    Skriver app-feedback direkte til Google Sheet.
-    """
-    try:
-        ws = connect_sheet()
-        if ws is None:
-            return
-
-        values = ws.get("A1:Z", value_render_option="FORMULA")
-        if not values:
-            return
-
-        header = values[0]
-
-        def col(name):
-            try:
-                return header.index(name)
-            except ValueError:
-                return -1
-
-        url_col = col("url")
-        score_col = col("feedback_score")
-        label_col = col("feedback_label")
-
-        if url_col == -1 or score_col == -1 or label_col == -1:
-            print("[WARN] Mangler url/feedback_score/feedback_label i Google Sheet")
-            return
-
-        target_row_number = None
-
-        for row_index, row in enumerate(values[1:], start=2):
-            if len(row) <= url_col:
-                continue
-
-            sheet_url = extract_url_from_sheet_cell(row[url_col])
-
-            if sheet_url == url:
-                target_row_number = row_index
-                break
-
-        if not target_row_number:
-            print("[WARN] Fandt ikke artiklen i Google Sheet")
-            return
-
-        score_cell = f"{column_letter(score_col)}{target_row_number}"
-        label_cell = f"{column_letter(label_col)}{target_row_number}"
-
-        ws.update(values=[[score]], range_name=score_cell)
-        ws.update(values=[[label]], range_name=label_cell)
-
-        print(f"Skrev feedback til Google Sheet: {score} / {label}")
-
-    except Exception as exc:
-        print(f"[WARN] Kunne ikke skrive feedback til Google Sheet: {exc}")
 
 
 
@@ -538,7 +431,6 @@ def mark_open():
         feedback_score=int(item.get("feedback_score") or 0),
         feedback_label=item.get("feedback_label") or "",
     )
-    update_feedback_in_sheet(url, item.get("feedback_score", "1"), item.get("feedback_label", "åbnet"))
 
     return redirect(url)
 
@@ -573,7 +465,6 @@ def mark_interesting():
         feedback_score=int(item.get("feedback_score") or 0),
         feedback_label=item.get("feedback_label") or "",
     )
-    update_feedback_in_sheet(url, item.get("feedback_score", "0"), item.get("feedback_label", "ikke_åbnet"))
 
     return redirect("/")
 

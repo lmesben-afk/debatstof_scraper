@@ -76,6 +76,18 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 """
 
+CREATE_KORSELSLOG_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS korselslog (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    korsel_tidspunkt TEXT NOT NULL,
+    status           TEXT,
+    fundne_artikler  INTEGER,
+    nye_artikler     INTEGER,
+    dubletter        INTEGER,
+    fejl             TEXT
+);
+"""
+
 
 def _migrate_schema(conn: sqlite3.Connection) -> None:
     """Tilføjer nye kolonner til eksisterende databaser uden at slette data."""
@@ -89,6 +101,43 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
 def _ensure_feedback_table(conn: sqlite3.Connection) -> None:
     conn.execute(CREATE_FEEDBACK_TABLE_SQL)
     conn.commit()
+
+
+def _ensure_korselslog_table(conn: sqlite3.Connection) -> None:
+    conn.execute(CREATE_KORSELSLOG_TABLE_SQL)
+    conn.commit()
+
+
+def log_korsel(
+    status: str,
+    fundne_artikler: int,
+    nye_artikler: int,
+    dubletter: int,
+    fejl: str = "",
+) -> None:
+    import datetime as dt
+    db_path = get_db_path()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with sqlite3.connect(str(db_path)) as conn:
+            _ensure_korselslog_table(conn)
+            conn.execute(
+                """
+                INSERT INTO korselslog
+                    (korsel_tidspunkt, status, fundne_artikler, nye_artikler, dubletter, fejl)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    dt.datetime.now(dt.timezone.utc).isoformat(),
+                    status,
+                    fundne_artikler,
+                    nye_artikler,
+                    dubletter,
+                    fejl or "",
+                ),
+            )
+    except Exception as exc:
+        print(f"[WARN] log_korsel fejlede: {exc}")
 
 
 def save_feedback_to_db(
@@ -380,6 +429,29 @@ def get_recent_articles(limit: int = 10) -> list[dict]:
         ).fetchall()
 
     return [dict(r) for r in rows]
+
+
+def get_recent_korsler(limit: int = 10) -> list[dict]:
+    db_path = get_db_path()
+    if not db_path.exists():
+        return []
+
+    try:
+        with _connect_readonly() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                """
+                SELECT korsel_tidspunkt, status, fundne_artikler,
+                       nye_artikler, dubletter, fejl
+                FROM korselslog
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+    except Exception:
+        return []
 
 
 def get_duplicates() -> dict:
