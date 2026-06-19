@@ -244,7 +244,7 @@ def scrape_altinget_direct(client, source, show_urls: bool = False, limit: Optio
             if title and len(title) >= 8:
                 item.title = title
 
-        items.append(altinget_clear_deck(item))
+        items.append(item)
         seen.add(absolute)
 
         print(f"- {item.media}: {item.title}" + (f"\n  {item.url}" if show_urls else ""))
