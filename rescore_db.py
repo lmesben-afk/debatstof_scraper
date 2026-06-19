@@ -19,7 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from db.database import get_db_path
+from db.database import get_db_path, get_feedback_bonus_by_topic
 from core.models import DebateItem
 from run_scraper import detect_micro_topics, calculate_story_potential, classify_themes
 
@@ -49,6 +49,9 @@ def rescore_all() -> None:
     ).fetchall()
 
     total = len(rows)
+    topic_bonus = get_feedback_bonus_by_topic()
+    if topic_bonus:
+        print(f"Læringsbonus aktiv for {len(topic_bonus)} mikroemner: {topic_bonus}")
     print(f"Fandt {total} artikler — starter rescoring ...")
 
     updates = []
@@ -70,7 +73,7 @@ def rescore_all() -> None:
 
         micro = detect_micro_topics(item.title, item.deck)
         temaer = classify_themes(item.title, item.deck)
-        score, signals = calculate_story_potential(item)
+        score, signals = calculate_story_potential(item, topic_bonus=topic_bonus)
 
         updates.append((
             json.dumps([t["mikroemne"] for t in micro], ensure_ascii=False),

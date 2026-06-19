@@ -837,7 +837,7 @@ def detect_jp_value_signals(text: str) -> list[str]:
     return found
 
 
-def calculate_story_potential(item: DebateItem) -> tuple[int, list[str]]:
+def calculate_story_potential(item: DebateItem, topic_bonus: dict = None) -> tuple[int, list[str]]:
     """
     JP-orienteret historiepotentiale-score.
     7 faktorer: JP-værdier, navngiven aktør, regional medie, mikroemner,
@@ -906,6 +906,13 @@ def calculate_story_potential(item: DebateItem) -> tuple[int, list[str]]:
     if not item.author and (not item.debate_type or item.debate_type.lower() not in exempt_types):
         score -= 10
         reasons.append("Mangler forfatter")
+
+    # Faktor 8: Læringsbonus fra stjernemarkeringer (maks +15)
+    if topic_bonus and micro_topics:
+        bonus = max((topic_bonus.get(t["mikroemne"], 0) for t in micro_topics), default=0)
+        if bonus > 0:
+            score += bonus
+            reasons.append(f"Læringsbonus: +{bonus}")
 
     # Begræns til 0-100 og fjern dubletter
     score = max(0, min(score, 100))
@@ -2506,9 +2513,11 @@ def run(dry_run: bool, limit_per_source: int, only: Optional[str], min_section_r
         return items
 
     # SQLite skrives før Google Sheets, så artikler gemmes lokalt selv hvis Sheets fejler.
+    sqlite_ok = False
     try:
         from db.database import write_items_to_sqlite
         write_items_to_sqlite([item_to_app_dict(i) for i in items])
+        sqlite_ok = True
     except Exception as db_exc:
         print(f"[ADVARSEL] SQLite-skrivning fejlede: {db_exc}")
 
@@ -2534,6 +2543,14 @@ def run(dry_run: bool, limit_per_source: int, only: Optional[str], min_section_r
             fejl=str(exc),
         )
         raise
+
+    if sqlite_ok:
+        try:
+            from rescore_db import rescore_all
+            print("\nKører rescore af alle artikler ...")
+            rescore_all()
+        except Exception as rescore_exc:
+            print(f"[WARN] Automatisk rescore fejlede: {rescore_exc}")
 
     return items
 

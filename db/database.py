@@ -124,6 +124,56 @@ def save_feedback_to_db(
         print(f"[WARN] save_feedback_to_db fejlede: {exc}")
 
 
+def get_feedback_bonus_by_topic() -> dict:
+    """
+    Tæller stjernemarkeringer pr. mikroemne og returnerer bonus pr. emne.
+
+    Bonusskala: 1 stjerne → +5, 2 stjerner → +10, 3+ stjerner → +15 (maks).
+    Returnerer {} hvis feedback-tabellen er tom eller ikke eksisterer.
+    """
+    db_path = get_db_path()
+    if not db_path.exists():
+        return {}
+
+    try:
+        with sqlite3.connect(str(db_path)) as conn:
+            _ensure_feedback_table(conn)
+            rows = conn.execute(
+                """
+                SELECT a.mikroemner
+                FROM feedback f
+                JOIN artikler a ON f.url = a.url
+                WHERE f.interesting = 1
+                  AND a.mikroemner IS NOT NULL
+                  AND a.mikroemner != '[]'
+                """
+            ).fetchall()
+    except Exception as exc:
+        print(f"[WARN] get_feedback_bonus_by_topic fejlede: {exc}")
+        return {}
+
+    topic_counts: dict = {}
+    for (mikroemner_json,) in rows:
+        try:
+            emner = json.loads(mikroemner_json or "[]")
+        except Exception:
+            continue
+        for emne in emner:
+            if emne:
+                topic_counts[emne] = topic_counts.get(emne, 0) + 1
+
+    bonuses = {}
+    for emne, count in topic_counts.items():
+        if count >= 3:
+            bonuses[emne] = 15
+        elif count == 2:
+            bonuses[emne] = 10
+        else:
+            bonuses[emne] = 5
+
+    return bonuses
+
+
 def get_all_feedback_from_db() -> dict:
     """
     Returnerer feedback-dict med url som nøgle — samme format som load_feedback().
