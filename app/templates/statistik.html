@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+
+  <div class="content-header">
+    <div class="content-header-meta">
+      <strong>Statistik</strong> · Databaseoverblik
+    </div>
+  </div>
+
+  <div class="statistik-grid">
+
+    <div class="stat-card">
+      <div class="stat-label">Artikler i alt</div>
+      <div class="stat-value">{{ stats.total or 0 }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Fundet i dag</div>
+      <div class="stat-value">{{ stats.i_dag or 0 }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Seneste 7 dage</div>
+      <div class="stat-value">{{ stats.seneste_7_dage or 0 }}</div>
+    </div>
+
+  </div>
+
+  <div class="stat-section">
+    <h2 class="stat-heading">Artikler pr. medie</h2>
+    <table class="stat-table">
+      <thead>
+        <tr>
+          <th>Medie</th>
+          <th class="num">Antal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for medie, antal in count_by_source %}
+        <tr>
+          <td>{{ medie }}</td>
+          <td class="num">{{ antal }}</td>
+        </tr>
+        {% endfor %}
+        {% if not count_by_source %}
+        <tr><td colspan="2" class="empty-row">Ingen data</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stat-section">
+    <h2 class="stat-heading">Seneste kørsler</h2>
+    <table class="stat-table">
+      <thead>
+        <tr>
+          <th>Tidspunkt</th>
+          <th>Status</th>
+          <th class="num">Fundet</th>
+          <th class="num">Nye</th>
+          <th class="num">Dubletter</th>
+          <th>Fejl</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for k in recent_korsler %}
+        <tr>
+          <td class="mono">{{ k.korsel_tidspunkt[:16] | replace("T", " ") }}</td>
+          <td>
+            <span class="korsel-status korsel-{{ k.status | lower }}">{{ k.status }}</span>
+          </td>
+          <td class="num">{{ k.fundne_artikler }}</td>
+          <td class="num">{{ k.nye_artikler }}</td>
+          <td class="num">{{ k.dubletter }}</td>
+          <td class="fejl-tekst">{{ k.fejl or '—' }}</td>
+        </tr>
+        {% endfor %}
+        {% if not recent_korsler %}
+        <tr><td colspan="6" class="empty-row">Ingen kørsler logget endnu</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+{% endblock %}
