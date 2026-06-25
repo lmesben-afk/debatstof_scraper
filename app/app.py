@@ -350,9 +350,17 @@ def collect_micro_options(articles):
     return sorted(options.items(), key=lambda item: item[1])
 
 
-def filter_articles(articles, micro="", level=""):
+ALLE_MEDIER = [
+    "Altinget", "Information", "Politiken", "Berlingske",
+    "Kristeligt Dagblad", "Avisen Danmark", "Nordjyske",
+    "Århus Stiftstidende", "Fyens Stiftstidende",
+    "JydskeVestkysten", "Viborg Folkeblad", "Sjællandske Nyheder",
+]
+
+
+def filter_articles(articles, micro="", level="", interesting_only=False, medie_filter=""):
     micro = (micro or "").strip()
-    level = (level or "").strip()
+    medie_filter = (medie_filter or "").strip()
 
     filtered = []
 
@@ -362,7 +370,16 @@ def filter_articles(articles, micro="", level=""):
         if micro and micro not in raw_micro_topics:
             continue
 
-        if level and level != article.get("score_level"):
+        if level == "prioriteret":
+            if article.get("score_adjusted", 0) <= 50:
+                continue
+        elif level and level != article.get("score_level"):
+            continue
+
+        if interesting_only and not article.get("interesting"):
+            continue
+
+        if medie_filter and article.get("medie") != medie_filter:
             continue
 
         filtered.append(article)
@@ -370,8 +387,20 @@ def filter_articles(articles, micro="", level=""):
     return filtered
 
 
-@app.route("/")
-def index():
+def _shared_template_vars(articles, micro, level, interesting_only, medie_filter):
+    """Variabler der bruges i både index og base-templaten."""
+    micro_options = collect_micro_options(articles)
+    return dict(
+        micro_options=micro_options,
+        alle_medier=ALLE_MEDIER,
+        micro=micro,
+        level=level,
+        interesting_only=interesting_only,
+        medie_filter=medie_filter,
+    )
+
+
+def _load_articles():
     data = load_data_from_db()
     if data is None:
         print("[WARN] SQLite utilgængelig — falder tilbage til articles.json")
@@ -383,26 +412,63 @@ def index():
     raw_articles = data.get("articles", [])
     feedback_signals = build_feedback_signals(raw_articles, feedback)
     articles = [prepare_article(a, feedback, feedback_signals) for a in raw_articles]
+    return data, articles
 
-    micro = request.args.get("micro", "")
-    level = request.args.get("level", "")
 
-    micro_options = collect_micro_options(articles)
-    filtered = filter_articles(articles, micro=micro, level=level)
+@app.route("/")
+def index():
+    data, articles = _load_articles()
 
-    filtered.sort(
-        key=lambda a: int(a.get("score_adjusted") or 0),
-        reverse=True,
+    micro           = request.args.get("micro", "")
+    level           = request.args.get("level", "")
+    interesting_only = request.args.get("interesting", "") == "1"
+    medie_filter    = request.args.get("medie", "")
+
+    filtered = filter_articles(
+        articles,
+        micro=micro,
+        level=level,
+        interesting_only=interesting_only,
+        medie_filter=medie_filter,
     )
+    filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=True)
+
+    # Bestem aktivt navigationspunkt
+    if interesting_only:
+        nav_active = "interessante"
+    elif level == "prioriteret":
+        nav_active = "prioriterede"
+    elif medie_filter:
+        nav_active = "medier"
+    elif micro:
+        nav_active = "debatspor"
+    else:
+        nav_active = "overblik"
+
+    shared = _shared_template_vars(articles, micro, level, interesting_only, medie_filter)
 
     return render_template(
         "index.html",
         data=data,
         articles=filtered,
         total_count=len(articles),
-        micro_options=micro_options,
-        micro=micro,
-        level=level,
+        nav_active=nav_active,
+        **shared,
+    )
+
+
+@app.route("/statistik")
+def statistik():
+    from db.database import get_stats, get_count_by_source
+    _, articles = _load_articles()
+    shared = _shared_template_vars(articles, "", "", False, "")
+    return render_template(
+        "statistik.html",
+        stats=get_stats(),
+        count_by_source=get_count_by_source(),
+        recent_korsler=[],
+        nav_active="statistik",
+        **shared,
     )
 
 

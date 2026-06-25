@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <title>Debatstof-radar</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-title">Debatstof-radar</div>
+      <div class="sidebar-logo-sub">Internt JP-værktøj</div>
+    </div>
+
+    <ul class="nav-list">
+
+      <li>
+        <a href="/" class="nav-item {% if nav_active == 'overblik' %}nav-active{% endif %}">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="2" y="2" width="7" height="7" rx="1"/>
+            <rect x="11" y="2" width="7" height="7" rx="1"/>
+            <rect x="2" y="11" width="7" height="7" rx="1"/>
+            <rect x="11" y="11" width="7" height="7" rx="1"/>
+          </svg>
+          Overblik
+        </a>
+      </li>
+
+      <li>
+        <a href="/?interesting=1" class="nav-item {% if nav_active == 'interessante' %}nav-active{% endif %}">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <polygon points="10,2 12.5,7.5 18.5,8.2 14,12.5 15.4,18.5 10,15.5 4.6,18.5 6,12.5 1.5,8.2 7.5,7.5"/>
+          </svg>
+          Interessante
+        </a>
+      </li>
+
+      <li>
+        <a href="/?level=prioriteret" class="nav-item {% if nav_active == 'prioriterede' %}nav-active{% endif %}">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <polyline points="4,14 10,6 16,14"/>
+          </svg>
+          Prioriterede
+        </a>
+      </li>
+
+      <li class="nav-group">
+        <details {% if nav_active == 'debatspor' %}open{% endif %}>
+          <summary class="nav-item nav-summary {% if nav_active == 'debatspor' %}nav-active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M3 5h14M3 10h10M3 15h7"/>
+            </svg>
+            Debatspor
+            <svg class="nav-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="3,4 6,8 9,4"/>
+            </svg>
+          </summary>
+          <ul class="nav-sub">
+            {% for raw, label in micro_options %}
+            <li>
+              <a href="/?micro={{ raw }}"
+                 class="nav-sub-item {% if micro == raw %}nav-sub-active{% endif %}">
+                {{ label }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </details>
+      </li>
+
+      <li class="nav-group">
+        <details {% if nav_active == 'medier' %}open{% endif %}>
+          <summary class="nav-item nav-summary {% if nav_active == 'medier' %}nav-active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="2" y="4" width="16" height="12" rx="1"/>
+              <line x1="2" y1="8" x2="18" y2="8"/>
+              <line x1="7" y1="8" x2="7" y2="16"/>
+            </svg>
+            Medier
+            <svg class="nav-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="3,4 6,8 9,4"/>
+            </svg>
+          </summary>
+          <ul class="nav-sub">
+            {% for medie_navn in alle_medier %}
+            <li>
+              <a href="/?medie={{ medie_navn | urlencode }}"
+                 class="nav-sub-item {% if medie_filter == medie_navn %}nav-sub-active{% endif %}">
+                {{ medie_navn }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </details>
+      </li>
+
+      <li>
+        <a href="/statistik" class="nav-item {% if nav_active == 'statistik' %}nav-active{% endif %}">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="3" y="12" width="3" height="6" rx="0.5"/>
+            <rect x="8.5" y="7" width="3" height="11" rx="0.5"/>
+            <rect x="14" y="3" width="3" height="15" rx="0.5"/>
+          </svg>
+          Statistik
+        </a>
+      </li>
+
+    </ul>
+  </nav>
+
+  <div class="main-content">
+    {% block content %}{% endblock %}
+  </div>
+
+</body>
+</html>
