@@ -459,6 +459,64 @@ def index():
     )
 
 
+def _load_all_articles():
+    """Loader ALLE artikler fra DB uden datobegrænsning til Topscorere-visningen."""
+    import sqlite3
+    db_path = get_db_path()
+    if db_path.exists():
+        try:
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT * FROM artikler ORDER BY fundet_kl DESC"
+            ).fetchall()
+            conn.close()
+            articles_raw = []
+            for row in rows:
+                d = dict(row)
+                d["temaer"]                         = json.loads(d.get("temaer")    or "[]")
+                d["mikroemner"]                     = json.loads(d.get("mikroemner") or "[]")
+                d["entiteter"]                      = json.loads(d.get("entiteter")  or "{}")
+                d["historiepotentiale_score"]       = d.pop("story_score", 0)
+                d["historiepotentiale_begrundelse"] = json.loads(d.pop("jp_signaler") or "[]")
+                articles_raw.append(d)
+            data = {
+                "generated_at": articles_raw[0]["fundet_kl"][:10] if articles_raw else "",
+                "count": len(articles_raw),
+                "sources": [],
+                "articles": articles_raw,
+            }
+        except Exception as exc:
+            print(f"[WARN] SQLite-læsning fejlede: {exc}")
+            data = load_data()
+    else:
+        data = load_data()
+    feedback = get_all_feedback_from_db()
+    if not feedback:
+        feedback = load_feedback()
+    raw_articles = data.get("articles", [])
+    feedback_signals = build_feedback_signals(raw_articles, feedback)
+    articles = [prepare_article(a, feedback, feedback_signals) for a in raw_articles]
+    return data, articles
+
+
+@app.route("/topscorere")
+def topscorere():
+    data, articles = _load_all_articles()
+    filtered = [a for a in articles if (a.get("score_adjusted") or 0) > 60]
+    filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=True)
+    shared = _shared_template_vars(articles, "", "", False, "")
+    return render_template(
+        "index.html",
+        data=data,
+        articles=filtered,
+        total_count=len(articles),
+        nav_active="topscorere",
+        sort_dir="desc",
+        **shared,
+    )
+
+
 @app.route("/statistik")
 def statistik():
     from db.database import get_stats, get_count_by_source

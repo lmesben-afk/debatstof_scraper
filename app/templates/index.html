@@ -3,7 +3,12 @@
 
   <div class="content-header">
     <div class="content-header-left">
-      <h1 class="content-title">Dagens debatstof</h1>
+      <h1 class="content-title">
+        {% if nav_active == 'topscorere' %}Topscorere
+        {% elif nav_active == 'interessante' %}Interessante
+        {% elif nav_active == 'prioriterede' %}Prioriterede
+        {% else %}Seneste 7 dage{% endif %}
+      </h1>
       <p class="content-meta">
         <strong class="meta-count">{{ total_count }}</strong> artikler i feedet
         <span class="meta-sep">·</span>
@@ -11,14 +16,6 @@
       </p>
     </div>
     <div class="content-header-right">
-      <button class="btn-filter" type="button">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-          <line x1="2" y1="4" x2="14" y2="4"/>
-          <line x1="4" y1="8" x2="12" y2="8"/>
-          <line x1="6" y1="12" x2="10" y2="12"/>
-        </svg>
-        Filtrér
-      </button>
       {% if sort_dir == "asc" %}
       <a href="{{ request.path }}?{% if micro %}micro={{ micro }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if interesting_only %}interesting=1&{% endif %}{% if medie_filter %}medie={{ medie_filter | urlencode }}&{% endif %}sort=desc" class="btn-sort">Score ↑</a>
       {% else %}
