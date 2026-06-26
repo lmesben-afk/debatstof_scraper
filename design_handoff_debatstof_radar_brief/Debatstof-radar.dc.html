@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <meta name="design_doc_mode" content="canvas">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+  </style>
+</helmet>
+
+<!-- ============ FRAME A : CLARITY (crisp SaaS table) ============ -->
+<div style="position:absolute; left:0px; top:0px; width:1080px;">
+  <div data-drags-parent="1" style="font-family:'Schibsted Grotesk',sans-serif; font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#8A8F98; margin-bottom:14px; cursor:grab;">Retning A · “Clarity” — ren datatabel</div>
+
+  <div data-screen-label="Overblik A" style="width:1080px; height:760px; background:#F7F8FA; border-radius:12px; box-shadow:0 1px 3px rgba(15,18,25,.08), 0 12px 40px rgba(15,18,25,.06); overflow:hidden; display:flex; font-family:'Schibsted Grotesk',sans-serif;">
+
+    <!-- sidebar -->
+    <aside style="width:218px; flex-shrink:0; background:#FFFFFF; border-right:1px solid #ECEEF1; padding:22px 14px; display:flex; flex-direction:column;">
+      <div style="padding:0 8px 20px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:22px; height:22px; border-radius:6px; background:#4F46E5; display:flex; align-items:center; justify-content:center;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="#fff" stroke="none"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
+          </div>
+          <div style="font-size:15px; font-weight:700; color:#16181D; letter-spacing:-.01em;">Debatstof-radar</div>
+        </div>
+        <div style="font-size:11px; color:#9AA1AB; margin-top:4px; padding-left:30px;">Internt JP-værktøj</div>
+      </div>
+
+      <nav style="display:flex; flex-direction:column; gap:2px;">
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; background:#F0F1FE; color:#4F46E5; font-size:13.5px; font-weight:600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Overblik
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; color:#5C6370; font-size:13.5px; font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.6l1.2-6L3.3 9.3l6.1-.7z"/></svg>
+          Interessante
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; color:#5C6370; font-size:13.5px; font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          Prioriterede
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 10px; border-radius:8px; color:#5C6370; font-size:13.5px; font-weight:500;">
+          <span style="display:flex; align-items:center; gap:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20.6 13.4L13.4 20.6a2 2 0 01-2.8 0l-7.2-7.2A2 2 0 013 12V4.6A1.6 1.6 0 014.6 3H12a2 2 0 011.4.6l7.2 7.2a2 2 0 010 2.8z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg> Debatspor</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B6BBC3" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 10px; border-radius:8px; color:#5C6370; font-size:13.5px; font-weight:500;">
+          <span style="display:flex; align-items:center; gap:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 5h13v14H5a2 2 0 01-2-2V6a1 1 0 011-1z"/><path d="M17 8h2.5A1.5 1.5 0 0121 9.5V17a2 2 0 01-2 2"/><path d="M7 9h7M7 13h7M7 17h4"/></svg> Medier</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B6BBC3" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; color:#5C6370; font-size:13.5px; font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          Statistik
+        </div>
+      </nav>
+
+      <div style="margin-top:auto; padding:10px; border-radius:10px; background:#F7F8FA; display:flex; align-items:center; gap:9px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#4F46E5; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;">MK</div>
+        <div style="line-height:1.2;"><div style="font-size:12.5px; font-weight:600; color:#16181D;">M. Krarup</div><div style="font-size:10.5px; color:#9AA1AB;">Redaktionen</div></div>
+      </div>
+    </aside>
+
+    <!-- main -->
+    <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+      <div style="padding:22px 28px 14px; display:flex; align-items:flex-end; justify-content:space-between;">
+        <div>
+          <div style="font-size:20px; font-weight:700; color:#16181D; letter-spacing:-.02em;">Overblik</div>
+          <div style="font-size:12.5px; color:#9AA1AB; margin-top:3px;"><span style="color:#5C6370; font-weight:600;">347</span> artikler i feedet · opdateret 25. jun 2026, 09:14</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div style="display:flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid #E5E7EB; border-radius:8px; font-size:12.5px; color:#5C6370; background:#fff;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg> Filtrér</div>
+          <div style="display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:8px; font-size:12.5px; color:#fff; background:#4F46E5; font-weight:600;">Score ↓</div>
+        </div>
+      </div>
+
+      <div style="flex:1; overflow:hidden; padding:0 28px 24px;">
+        <div style="background:#fff; border:1px solid #EEF0F3; border-radius:12px; overflow:hidden;">
+          <!-- header row -->
+          <div style="display:grid; grid-template-columns:64px 132px 1fr 188px 38px; gap:14px; padding:11px 18px; border-bottom:1px solid #EEF0F3; font-size:10.5px; font-weight:600; letter-spacing:.06em; color:#9AA1AB; text-transform:uppercase;">
+            <div>Score</div><div>Medie</div><div>Rubrik</div><div>Emner</div><div style="text-align:center;">★</div>
+          </div>
+
+          <sc-for list="{{ rows }}" as="a" hint-placeholder-count="9">
+            <div style="display:grid; grid-template-columns:64px 132px 1fr 188px 38px; gap:14px; padding:12px 18px; border-bottom:1px solid #F2F4F6; align-items:start;">
+              <div>
+                <div style="font-size:17px; font-weight:700; letter-spacing:-.02em; color:{{ a.color }}; line-height:1;">{{ a.score }}</div>
+                <div style="height:3px; width:34px; border-radius:2px; margin-top:5px; background:#EEF0F3; overflow:hidden;"><div style="height:100%; width:{{ a.pct }}; background:{{ a.color }};"></div></div>
+                <sc-if value="{{ a.read }}" hint-placeholder-val="{{ false }}"><div style="display:inline-block; margin-top:7px; font-size:9px; font-weight:600; letter-spacing:.05em; color:#A8AEB7; background:#F3F4F6; padding:1px 5px; border-radius:4px;">LÆST</div></sc-if>
+              </div>
+              <div style="padding-top:1px;">
+                <div style="font-size:12.5px; font-weight:600; color:#3D424B;">{{ a.media }}</div>
+                <div style="font-size:11px; color:#A8AEB7; margin-top:2px;">{{ a.date }}</div>
+              </div>
+              <div style="min-width:0; padding-right:8px;">
+                <div style="font-size:13.5px; font-weight:600; color:#16181D; line-height:1.35; letter-spacing:-.01em;">{{ a.title }}</div>
+                <div style="font-size:11.5px; color:#8A8F98; margin-top:3px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{{ a.dek }}</div>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:5px; align-content:flex-start;">
+                <sc-for list="{{ a.topics }}" as="t" hint-placeholder-count="2">
+                  <span style="font-size:10.5px; font-weight:500; color:#4B5563; background:#F1F3F5; padding:3px 8px; border-radius:6px;">{{ t }}</span>
+                </sc-for>
+              </div>
+              <div style="display:flex; justify-content:center; padding-top:1px;">
+                <sc-if value="{{ a.star }}" hint-placeholder-val="{{ false }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="#F5B301" stroke="#F5B301" stroke-width="1.4"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.6l1.2-6L3.3 9.3l6.1-.7z"/></svg></sc-if>
+                <sc-if value="{{ a.notStar }}" hint-placeholder-val="{{ true }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CFD3DA" stroke-width="1.6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.6l1.2-6L3.3 9.3l6.1-.7z"/></svg></sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ FRAME B : BRIEF (warm modern card feed) ============ -->
+<div style="position:absolute; left:1200px; top:0px; width:1080px;">
+  <div data-drags-parent="1" style="font-family:'Schibsted Grotesk',sans-serif; font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#8A8F98; margin-bottom:14px; cursor:grab;">Retning B · “Brief” — varmt redaktionelt feed</div>
+
+  <div data-screen-label="Overblik B" style="width:1080px; height:760px; background:#FBFAF6; border-radius:12px; box-shadow:0 1px 3px rgba(40,34,22,.08), 0 12px 40px rgba(40,34,22,.07); overflow:hidden; display:flex; font-family:'Schibsted Grotesk',sans-serif;">
+
+    <!-- sidebar -->
+    <aside style="width:218px; flex-shrink:0; background:#FFFFFF; border-right:1px solid #EEE8DC; padding:22px 14px; display:flex; flex-direction:column;">
+      <div style="padding:0 8px 20px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:22px; height:22px; border-radius:7px; background:#0E7C66; display:flex; align-items:center; justify-content:center;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="#fff" stroke="none"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
+          </div>
+          <div style="font-family:'Newsreader',serif; font-size:17px; font-weight:600; color:#211D16; letter-spacing:-.01em;">Debatstof-radar</div>
+        </div>
+        <div style="font-size:11px; color:#A99F8C; margin-top:4px; padding-left:30px;">Internt JP-værktøj</div>
+      </div>
+
+      <nav style="display:flex; flex-direction:column; gap:2px;">
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; background:#EEF3EF; color:#0E7C66; font-size:13.5px; font-weight:600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Overblik
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; color:#6B6354; font-size:13.5px; font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.6l1.2-6L3.3 9.3l6.1-.7z"/></svg>
+          Interessante
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; color:#6B6354; font-size:13.5px; font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          Prioriterede
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 10px; border-radius:9px; color:#6B6354; font-size:13.5px; font-weight:500;">
+          <span style="display:flex; align-items:center; gap:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20.6 13.4L13.4 20.6a2 2 0 01-2.8 0l-7.2-7.2A2 2 0 013 12V4.6A1.6 1.6 0 014.6 3H12a2 2 0 011.4.6l7.2 7.2a2 2 0 010 2.8z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg> Debatspor</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9BFAD" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 10px; border-radius:9px; color:#6B6354; font-size:13.5px; font-weight:500;">
+          <span style="display:flex; align-items:center; gap:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 5h13v14H5a2 2 0 01-2-2V6a1 1 0 011-1z"/><path d="M17 8h2.5A1.5 1.5 0 0121 9.5V17a2 2 0 01-2 2"/><path d="M7 9h7M7 13h7M7 17h4"/></svg> Medier</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9BFAD" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; color:#6B6354; font-size:13.5px; font-weight:500;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          Statistik
+        </div>
+      </nav>
+
+      <div style="margin-top:auto; padding:10px; border-radius:11px; background:#F7F4ED; display:flex; align-items:center; gap:9px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;">MK</div>
+        <div style="line-height:1.2;"><div style="font-size:12.5px; font-weight:600; color:#211D16;">M. Krarup</div><div style="font-size:10.5px; color:#A99F8C;">Redaktionen</div></div>
+      </div>
+    </aside>
+
+    <!-- main -->
+    <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+      <div style="padding:22px 26px 12px; display:flex; align-items:flex-end; justify-content:space-between;">
+        <div>
+          <div style="font-family:'Newsreader',serif; font-size:24px; font-weight:600; color:#211D16; letter-spacing:-.01em;">Dagens debatstof</div>
+          <div style="font-size:12.5px; color:#A99F8C; margin-top:3px;"><span style="color:#6B6354; font-weight:600;">347</span> artikler i feedet · opdateret 25. jun 2026, 09:14</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div style="display:flex; align-items:center; gap:6px; padding:7px 13px; border:1px solid #E6DFD2; border-radius:20px; font-size:12.5px; color:#6B6354; background:#fff;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg> Filtrér</div>
+          <div style="display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:20px; font-size:12.5px; color:#fff; background:#0E7C66; font-weight:600;">Score ↓</div>
+        </div>
+      </div>
+
+      <div style="flex:1; overflow:hidden; padding:6px 26px 24px; display:flex; flex-direction:column; gap:9px;">
+        <sc-for list="{{ rows }}" as="a" hint-placeholder-count="7">
+          <div style="display:flex; align-items:stretch; gap:16px; background:#fff; border:1px solid #EFEADF; border-radius:14px; padding:14px 16px; box-shadow:0 1px 2px rgba(40,34,22,.04);">
+            <div style="width:54px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #F1ECE1; padding-right:14px;">
+              <div style="font-family:'Newsreader',serif; font-size:26px; font-weight:600; color:{{ a.color }}; line-height:1;">{{ a.score }}</div>
+              <div style="font-size:8.5px; font-weight:600; letter-spacing:.08em; color:#BCB3A2; text-transform:uppercase; margin-top:3px;">score</div>
+            </div>
+            <div style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <span style="font-size:11px; font-weight:600; color:#6B6354;">{{ a.media }}</span>
+                <span style="width:3px; height:3px; border-radius:50%; background:#D6CDBC;"></span>
+                <span style="font-size:11px; color:#A99F8C;">{{ a.date }}</span>
+                <sc-if value="{{ a.read }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px; font-weight:600; letter-spacing:.05em; color:#B0A794; background:#F4F0E8; padding:1px 6px; border-radius:5px;">LÆST</span></sc-if>
+              </div>
+              <div style="font-family:'Newsreader',serif; font-size:17px; font-weight:500; color:#1C1810; line-height:1.28; letter-spacing:-.005em;">{{ a.title }}</div>
+              <div style="font-size:12px; color:#8C8474; margin-top:4px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;">{{ a.dek }}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between; flex-shrink:0; padding-left:6px;">
+              <sc-if value="{{ a.star }}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="#E0A52E" stroke="#E0A52E" stroke-width="1.4"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.6l1.2-6L3.3 9.3l6.1-.7z"/></svg></sc-if>
+              <sc-if value="{{ a.notStar }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D6CDBC" stroke-width="1.6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.6l1.2-6L3.3 9.3l6.1-.7z"/></svg></sc-if>
+              <div style="display:flex; gap:5px; margin-top:auto;">
+                <sc-for list="{{ a.topics }}" as="t" hint-placeholder-count="2">
+                  <span style="font-size:10.5px; font-weight:500; color:#3B6B4A; background:#E9F1E8; padding:3px 9px; border-radius:20px; white-space:nowrap;">{{ t }}</span>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  scoreColor(s) {
+    if (s >= 80) return '#D34A3C';
+    if (s >= 60) return '#D98A2B';
+    return '#9AA1AB';
+  }
+  renderVals() {
+    const data = [
+      { score:92, media:'Politiken',     date:'25. jun', title:'Regeringen udskyder klimamålet igen — og denne gang er der ingen plan B', dek:'Tre ministre lover at "vende tilbage", men eksperter kalder udskydelsen en de facto opgivelse af 2030-løftet.', topics:['Klima','Regeringen'], star:true,  read:true  },
+      { score:88, media:'Berlingske',    date:'25. jun', title:'Pensionsalderen mod 72: Velfærd eller svigt af de nedslidte?', dek:'Et bredt flertal står bag, men fagbevægelsen advarer om en social slagside, der rammer skævt.', topics:['Velfærd','Arbejdsmarked'], star:true, read:false },
+      { score:81, media:'DR Nyheder',    date:'25. jun', title:'Kunstig intelligens i folkeskolen deler lærerne på midten', dek:'Nogle ser et frigørende værktøj, andre frygter at eleverne aflærer selv at tænke.', topics:['Uddannelse','Teknologi'], star:false, read:false },
+      { score:76, media:'Altinget',      date:'24. jun', title:'Sundhedsreformen mangler 4.000 sygeplejersker — hvor skal de komme fra?', dek:'Regionerne kan ikke pege på rekrutteringen, og reformens tidsplan vakler allerede inden start.', topics:['Sundhed'], star:false, read:false },
+      { score:64, media:'Information',   date:'24. jun', title:'Ytringsfriheden under pres: Når selvcensur bliver den nye norm', dek:'En rundspørge viser, at hver fjerde debattør holder igen af frygt for shitstorms.', topics:['Medier','Demokrati'], star:false, read:false },
+      { score:58, media:'TV 2',          date:'24. jun', title:'Boligpriserne i København falder for første gang i et årti', dek:'Renten bider, og førstegangskøberne tøver. Er drømmen om egen bolig ved at vende tilbage?', topics:['Økonomi','Bolig'], star:false, read:true },
+      { score:49, media:'Jyllands-Posten', date:'23. jun', title:'Den grønne omstilling skaber nye skel mellem by og land', dek:'Vindmøller og solceller deler lokalsamfund, mens byboerne høster gevinsten.', topics:['Klima','Geografi'], star:false, read:false },
+      { score:41, media:'Zetland',       date:'23. jun', title:'Mændene forsvinder fra de videregående uddannelser', dek:'Kvinderne udgør nu to ud af tre studerende. Ingen taler om ligestilling den anden vej.', topics:['Uddannelse','Ligestilling'], star:false, read:false },
+      { score:33, media:'Weekendavisen', date:'22. jun', title:'Kulturkampen om de nationale museer blusser op igen', dek:'Skal fortiden kurateres eller forklares? Striden om formidlingen splitter fagfolk.', topics:['Kultur'], star:false, read:false },
+    ];
+    const rows = data.map(a => {
+      const color = this.scoreColor(a.score);
+      return { ...a, color, pct: a.score + '%', notStar: !a.star };
+    });
+    return { rows };
+  }
+}
+</script>
+</body>
+</html>

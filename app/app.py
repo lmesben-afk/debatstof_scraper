@@ -300,7 +300,7 @@ def format_pub_dato(value: str) -> str:
         try:
             day = int(value[8:10])
             month = int(value[5:7])
-            return f"{day}/{month}"
+            return f"{day}. {DANISH_MONTHS[month - 1]}"
         except Exception:
             pass
 
@@ -310,7 +310,7 @@ def format_pub_dato(value: str) -> str:
         day = int(parts[0].rstrip("."))
         month = DANISH_MONTH_NAMES.get(parts[1].lower())
         if month:
-            return f"{day}/{month}"
+            return f"{day}. {DANISH_MONTHS[month - 1]}"
     except Exception:
         pass
 
@@ -423,6 +423,7 @@ def index():
     level           = request.args.get("level", "")
     interesting_only = request.args.get("interesting", "") == "1"
     medie_filter    = request.args.get("medie", "")
+    sort_dir        = request.args.get("sort", "desc")
 
     filtered = filter_articles(
         articles,
@@ -431,7 +432,7 @@ def index():
         interesting_only=interesting_only,
         medie_filter=medie_filter,
     )
-    filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=True)
+    filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=(sort_dir != "asc"))
 
     # Bestem aktivt navigationspunkt
     if interesting_only:
@@ -453,6 +454,7 @@ def index():
         articles=filtered,
         total_count=len(articles),
         nav_active=nav_active,
+        sort_dir=sort_dir,
         **shared,
     )
 
