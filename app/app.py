@@ -149,6 +149,7 @@ MICRO_TOPIC_LABELS = {
     "frit_valg_på_plejehjem": "Frit valg på plejehjem",
     "drikkevand_og_landbrug": "Drikkevand og landbrug",
     "håndtryk_ligestilling_og_religion": "Håndtryk, ligestilling og religion",
+    "opdragelse_og_forældreskab": "Opdragelse og forældreskab",
 }
 
 
