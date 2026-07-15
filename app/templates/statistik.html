@@ -65,7 +65,10 @@
       <tbody>
         {% for k in recent_korsler %}
         <tr>
-          <td class="mono">{{ k.korsel_tidspunkt[:16] | replace("T", " ") }}</td>
+          {% set ts = k.korsel_tidspunkt %}
+          {% set dato = ts[8:10].lstrip('0') + '/' + ts[5:7].lstrip('0') + '/' + ts[0:4] %}
+          {% set tid = ts[11:16] if ts|length > 10 else '' %}
+          <td class="mono">{{ dato }}{% if tid %} {{ tid }}{% endif %}</td>
           <td>
             <span class="korsel-status korsel-{{ k.status | lower }}">{{ k.status }}</span>
           </td>

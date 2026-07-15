@@ -301,7 +301,8 @@ def format_pub_dato(value: str) -> str:
         try:
             day = int(value[8:10])
             month = int(value[5:7])
-            return f"{day}. {DANISH_MONTHS[month - 1]}"
+            year = int(value[0:4])
+            return f"{day}/{month}/{year}"
         except Exception:
             pass
 
@@ -310,8 +311,9 @@ def format_pub_dato(value: str) -> str:
         parts = value.split()
         day = int(parts[0].rstrip("."))
         month = DANISH_MONTH_NAMES.get(parts[1].lower())
+        year = int(parts[2].rstrip(",")) if len(parts) > 2 else ""
         if month:
-            return f"{day}. {DANISH_MONTHS[month - 1]}"
+            return f"{day}/{month}/{year}" if year else f"{day}/{month}"
     except Exception:
         pass
 
@@ -520,14 +522,14 @@ def topscorere():
 
 @app.route("/statistik")
 def statistik():
-    from db.database import get_stats, get_count_by_source
+    from db.database import get_stats, get_count_by_source, get_recent_korsler
     _, articles = _load_articles()
     shared = _shared_template_vars(articles, "", "", False, "")
     return render_template(
         "statistik.html",
         stats=get_stats(),
         count_by_source=get_count_by_source(),
-        recent_korsler=[],
+        recent_korsler=get_recent_korsler(),
         nav_active="statistik",
         **shared,
     )
