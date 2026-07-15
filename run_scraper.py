@@ -1177,6 +1177,22 @@ MICRO_TOPIC_PATTERNS = {
         "læseindlæring",
         "matematik",
     ],
+    "opdragelse_og_forældreskab": [
+        "opdragelse",
+        "børneopdragelse",
+        "forældreskab",
+        "forældreansvar",
+        "helikopterforældre",
+        "curlingforældre",
+        "konsekvenspædagogik",
+        "fri opdragelse",
+        "forældrerolle",
+        "opdrage",
+        "opdragelsesmetoder",
+        "kærlighed og grænser",
+        "selvstændige børn",
+        "opdragelsesfilosofi",
+    ],
     "boligkrise_og_lokalplaner": [
         "boligkrise",
         "boligmangel",
@@ -1470,6 +1486,7 @@ def detect_micro_topics(title: str, deck: str = "") -> list[dict]:
             "udenrigspolitik_og_sikkerhed",
             "socialpolitik_og_fattigdom",
             "ytringsfrihed_og_medier",
+            "opdragelse_og_forældreskab",
         }
 
         if len(hits) >= 2 or (topic_name in strong_single_hit_topics and len(hits) >= 1):

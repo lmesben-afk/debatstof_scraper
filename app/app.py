@@ -67,6 +67,7 @@ MICRO_TOPIC_LABELS = {
     "udenrigspolitik_og_sikkerhed":   "Udenrigspolitik og sikkerhed",
     "socialpolitik_og_fattigdom":     "Socialpolitik og fattigdom",
     "ytringsfrihed_og_medier":        "Ytringsfrihed og medier",
+    "opdragelse_og_forældreskab":     "Opdragelse og forældreskab",
 }
 
 
