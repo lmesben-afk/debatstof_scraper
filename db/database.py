@@ -13,10 +13,8 @@ import sqlite3
 from pathlib import Path
 from typing import List
 
-FALLBACK_PATH = (
-    Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Fælles-data")
-    / "debatstof.db"
-)
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FALLBACK_PATH = _PROJECT_ROOT / "Fælles-data" / "debatstof.db"
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS artikler (
@@ -258,10 +256,7 @@ def get_all_feedback_from_db() -> dict:
         }
 
     # Tabel er tom — forsøg migration fra feedback.json
-    feedback_json = (
-        _Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus"
-              r"\Jyllands-Posten\Scrapere\Fælles-data") / "feedback.json"
-    )
+    feedback_json = Path(__file__).resolve().parents[1] / "Fælles-data" / "feedback.json"
     if not feedback_json.exists():
         return {}
 

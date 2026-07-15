@@ -11,13 +11,13 @@ import os
 from db.database import get_db_path, save_feedback_to_db, get_all_feedback_from_db
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_FILE = Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Fælles-data") / "articles.json"
-FEEDBACK_FILE = Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Fælles-data") / "feedback.json"
+BASE_DIR      = Path(__file__).resolve().parent.parent
+DATA_FILE     = BASE_DIR / "Fælles-data" / "articles.json"
+FEEDBACK_FILE = BASE_DIR / "Fælles-data" / "feedback.json"
 
 app = Flask(__name__)
 
-CONFIG_DIR = Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Config-filer")
+CONFIG_DIR = BASE_DIR / "Config-filer"
 
 
 def load_env_file():
@@ -424,6 +424,7 @@ def index():
     interesting_only = request.args.get("interesting", "") == "1"
     medie_filter    = request.args.get("medie", "")
     sort_dir        = request.args.get("sort", "desc")
+    sort_by         = request.args.get("sort_by", "score")
 
     filtered = filter_articles(
         articles,
@@ -432,7 +433,10 @@ def index():
         interesting_only=interesting_only,
         medie_filter=medie_filter,
     )
-    filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=(sort_dir != "asc"))
+    if sort_by == "dato":
+        filtered.sort(key=lambda a: a.get("fundet_kl") or "", reverse=(sort_dir != "asc"))
+    else:
+        filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=(sort_dir != "asc"))
 
     # Bestem aktivt navigationspunkt
     if interesting_only:
@@ -455,6 +459,7 @@ def index():
         total_count=len(articles),
         nav_active=nav_active,
         sort_dir=sort_dir,
+        sort_by=sort_by,
         **shared,
     )
 
@@ -503,8 +508,13 @@ def _load_all_articles():
 @app.route("/topscorere")
 def topscorere():
     data, articles = _load_all_articles()
+    sort_dir = request.args.get("sort", "desc")
+    sort_by  = request.args.get("sort_by", "score")
     filtered = [a for a in articles if (a.get("score_adjusted") or 0) > 60]
-    filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=True)
+    if sort_by == "dato":
+        filtered.sort(key=lambda a: a.get("fundet_kl") or "", reverse=(sort_dir != "asc"))
+    else:
+        filtered.sort(key=lambda a: int(a.get("score_adjusted") or 0), reverse=(sort_dir != "asc"))
     shared = _shared_template_vars(articles, "", "", False, "")
     return render_template(
         "index.html",
@@ -512,7 +522,8 @@ def topscorere():
         articles=filtered,
         total_count=len(articles),
         nav_active="topscorere",
-        sort_dir="desc",
+        sort_dir=sort_dir,
+        sort_by=sort_by,
         **shared,
     )
 

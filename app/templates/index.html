@@ -16,10 +16,25 @@
       </p>
     </div>
     <div class="content-header-right">
-      {% if sort_dir == "asc" %}
-      <a href="{{ request.path }}?{% if micro %}micro={{ micro }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if interesting_only %}interesting=1&{% endif %}{% if medie_filter %}medie={{ medie_filter | urlencode }}&{% endif %}sort=desc" class="btn-sort">Score ↑</a>
+      {% set qbase %}{% if micro %}micro={{ micro }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if interesting_only %}interesting=1&{% endif %}{% if medie_filter %}medie={{ medie_filter | urlencode }}&{% endif %}{% endset %}
+      {% if sort_by == "score" %}
+        {% if sort_dir == "asc" %}
+        <a href="{{ request.path }}?{{ qbase }}sort_by=score&sort=desc" class="btn-sort btn-sort-active">Score ↑</a>
+        {% else %}
+        <a href="{{ request.path }}?{{ qbase }}sort_by=score&sort=asc" class="btn-sort btn-sort-active">Score ↓</a>
+        {% endif %}
+        {% if sort_dir == "asc" %}
+        <a href="{{ request.path }}?{{ qbase }}sort_by=dato&sort=desc" class="btn-sort">Dato ↓</a>
+        {% else %}
+        <a href="{{ request.path }}?{{ qbase }}sort_by=dato&sort=desc" class="btn-sort">Dato ↓</a>
+        {% endif %}
       {% else %}
-      <a href="{{ request.path }}?{% if micro %}micro={{ micro }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if interesting_only %}interesting=1&{% endif %}{% if medie_filter %}medie={{ medie_filter | urlencode }}&{% endif %}sort=asc" class="btn-sort">Score ↓</a>
+        <a href="{{ request.path }}?{{ qbase }}sort_by=score&sort=desc" class="btn-sort">Score ↓</a>
+        {% if sort_dir == "asc" %}
+        <a href="{{ request.path }}?{{ qbase }}sort_by=dato&sort=desc" class="btn-sort btn-sort-active">Dato ↑</a>
+        {% else %}
+        <a href="{{ request.path }}?{{ qbase }}sort_by=dato&sort=asc" class="btn-sort btn-sort-active">Dato ↓</a>
+        {% endif %}
       {% endif %}
     </div>
   </div>
