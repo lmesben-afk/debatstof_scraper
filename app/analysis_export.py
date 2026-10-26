@@ -22,7 +22,7 @@ Undersøg derefter de aktuelle regler og et varieret udvalg fra review_group=udv
 Vis konkrete artikler med id, rubrik, medie og begrundelse, som reglerne muligvis vurderer for højt eller lavt.
 Bed mig vurdere eksemplerne, før du foreslår nye regler. En manglende stjerne betyder ikke uinteressant.
 Skeln mellem rubrik/manchet og fuld artikeltekst; fuld artikeltekst er ikke medtaget.
-Undersøg nøgleord, delstrengsmatch, vægte, mediebonus, mikroemner og begge feedbackmekanismer.
+Undersøg nøgleord, delstrengsmatch, vægte, mediebonus, mikroemner og den begrænsede feedbackjustering.
 Skeln mellem gemte scorer, genberegnede scorer og de viste scorer i arkiv og syvdagesvisning.
 Hold review_group=kontrol adskilt, indtil forslagene er fastlagt; brug den derefter til evaluering.
 Kontrolgruppen er kun en deterministisk opdeling, ikke en uafhængig eller ekspertmærket test.
@@ -52,6 +52,7 @@ def rule_snapshot():
                       'build_feedback_signals', 'feedback_signal_for_article', 'prepare_article',
                       'format_pub_dato')
     sources = {
+        'core/editorial.py': (ROOT / 'core/editorial.py').read_text(encoding='utf-8'),
         'run_scraper.py': '\n\n'.join(inspect.getsource(getattr(scraper, name)) for name in score_functions),
         'app/app.py': '\n\n'.join(inspect.getsource(getattr(views, name)) for name in view_functions),
         'db/database.py': inspect.getsource(database.get_feedback_bonus_by_topic),
@@ -119,7 +120,7 @@ def build_export():
                           article.get('debat_type') or '', url, article.get('fundet_via') or '',
                           article.get('status') or '')
         score, reasons = scraper.calculate_story_potential(item)
-        learned_score, learned_reasons = scraper.calculate_story_potential(item, topic_bonus=topic_bonus)
+        learned_score, learned_reasons = score, list(reasons)  # Feedback is now display-only.
         prepared = views.prepare_article(article, feedback, archive_signals)
         in_recent = (article.get('fundet_kl') or '') >= week_ago
         displayed_recent = views.prepare_article(article, feedback, recent_signals) if in_recent else None
@@ -156,6 +157,7 @@ def build_export():
             'En manglende stjerne eller manglende feedback er ikke en negativ redaktionel vurdering.',
             'Gemte scorer kan være beregnet med tidligere regler. Current_rules er genberegnet med reglerne i denne eksport.',
             'Display_archive bruger feedback fra hele arkivet; display_recent bruger samme datogrænse som appens forside.',
+            'Personlig feedback anvendes kun i visningslaget (højst +5); learning_bonus_snapshot er et historisk diagnosesignal og lægges ikke til grundscoren.',
             'Keyword_constants kan indeholde ubrugte nøgleord; implementation viser, hvilke regler der faktisk anvendes.',
             'Ingen regler eller data er ændret af eksporten. Filen sendes ikke automatisk til ChatGPT.',
         ],
@@ -167,6 +169,7 @@ def build_export():
                     'recent_cutoff': week_ago},
         'deployed_commit': os.environ.get('RENDER_GIT_COMMIT'),
         'rules': rule_snapshot(), 'learning_bonus_snapshot': topic_bonus,
+        'learning_bonus_applied_in_base_score': False,
         'articles': output,
         'feedback_records': feedback_rows,
     }

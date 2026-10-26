@@ -29,6 +29,9 @@ app.register_blueprint(analysis_export_blueprint)
 
 
 MICRO_TOPIC_LABELS = {
+    "familieliv_og_arbejde": "Familieliv og arbejdsmarked",
+    "ligestilling_religion_og_faellesrum": "Ligestilling, religion og fællesrum",
+    "klima_og_lokal_indflydelse": "Klima og lokal indflydelse",
     "frit_valg_og_privatisering":    "Frit valg og privatisering",
     "ældreplejen_og_kommuner":        "Ældrepleje og kommuner",
     "psykiatri_og_mental_sundhed":    "Psykiatri og mental sundhed",
@@ -139,16 +142,17 @@ def load_data_from_db():
 
 
 def score_level(score):
+    from core.editorial import SCORE_LEVELS
     try:
         score = int(score)
     except Exception:
         score = 0
 
-    if score >= 80:
+    if score >= SCORE_LEVELS['high']:
         return "høj"
-    if score >= 60:
+    if score >= SCORE_LEVELS['interesting']:
         return "interessant"
-    if score >= 40:
+    if score >= SCORE_LEVELS['watch']:
         return "overvåg"
     return "lav"
 
@@ -183,7 +187,7 @@ def build_feedback_signals(raw_articles, feedback):
     Regler:
     - interessant i samme debatspor giver stærkt positivt signal
     - åbnet i samme debatspor giver svagt positivt signal
-    - mange ignorerede artikler i samme debatspor dæmper lidt
+    - manglende åbninger giver ingen straf; samlet bonus er højst fem point
     """
     topic_stats = {}
 
@@ -212,63 +216,19 @@ def build_feedback_signals(raw_articles, feedback):
                 topic_stats[raw]["interesting"] += 1
 
     signals = {}
-
     for raw, stats in topic_stats.items():
-        score = 0
-        reasons = []
-
-        if stats["interesting"]:
-            bonus = min(stats["interesting"] * 10, 25)
-            score += bonus
-            reasons.append(f"{stats['interesting']} interessant i samme debatspor")
-
-        if stats["opened"]:
-            bonus = min(stats["opened"] * 3, 12)
-            score += bonus
-            reasons.append(f"{stats['opened']} åbnet i samme debatspor")
-
-        ignored = stats["total"] - stats["opened"]
-        if stats["total"] >= 3 and ignored == stats["total"]:
-            score -= 5
-            reasons.append("debatspor er hidtil ignoreret")
-
-        signals[raw] = {
-            "score": score,
-            "reasons": reasons,
-            "stats": stats,
-        }
-
+        # Sparse explicit feedback is a small positive hint, never a negative label.
+        score = min(stats['interesting'] * 2 + max(0, stats['opened'] - stats['interesting']), 5)
+        reasons = [f"Positiv feedback i debatsporet: +{score}"] if score else []
+        signals[raw] = {'score': score, 'reasons': reasons, 'stats': stats}
     return signals
 
 
 def feedback_signal_for_article(article, feedback_signals):
-    """
-    Samler feedbacksignal for en artikel ud fra dens debatspor.
-    """
-    topics = micro_topics_to_display(article.get("mikroemner"))
-    total = 0
-    reasons = []
-
-    for topic in topics:
-        raw = topic["raw"]
-        signal = feedback_signals.get(raw)
-
-        if not signal:
-            continue
-
-        total += signal["score"]
-        reasons.extend(signal["reasons"])
-
-    # Feedback skal justere, ikke overtage.
-    total = max(min(total, 25), -10)
-
-    # Fjern dubletter
-    unique_reasons = []
-    for reason in reasons:
-        if reason not in unique_reasons:
-            unique_reasons.append(reason)
-
-    return total, unique_reasons
+    """Use the strongest topic hint once, capped at five points."""
+    signals = [feedback_signals.get(topic['raw'], {}) for topic in micro_topics_to_display(article.get('mikroemner'))]
+    best = max(signals, key=lambda signal: signal.get('score',0), default={})
+    return max(0, min(best.get('score',0),5)), best.get('reasons', [])
 
 
 DANISH_MONTHS = ["jan", "feb", "mar", "apr", "maj", "jun",
@@ -364,7 +324,7 @@ def filter_articles(articles, micro="", level="", interesting_only=False, medie_
             continue
 
         if level == "prioriteret":
-            if article.get("score_adjusted", 0) <= 50:
+            if article.get("score_adjusted", 0) < 40:
                 continue
         elif level and level != article.get("score_level"):
             continue
@@ -514,7 +474,7 @@ def topscorere():
     data, articles = _load_all_articles()
     sort_dir = request.args.get("sort", "desc")
     sort_by  = request.args.get("sort_by", "score")
-    filtered = [a for a in articles if (a.get("score_adjusted") or 0) > 60]
+    filtered = [a for a in articles if (a.get("score_adjusted") or 0) >= 40]
     if sort_by == "dato":
         filtered.sort(key=lambda a: a.get("fundet_kl") or "", reverse=(sort_dir != "asc"))
     else:

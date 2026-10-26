@@ -14,6 +14,8 @@ def main():
     from db.database import initialize_database
     from app.app import app  # Fail before starting children if login is missing.
     initialize_database()
+    from rescore_db import ensure_current_scoring
+    ensure_current_scoring()
     interval = int(os.environ.get('SCRAPE_INTERVAL_SECONDS', '3600'))
     if interval < 300:
         raise ValueError('SCRAPE_INTERVAL_SECONDS must be at least 300')

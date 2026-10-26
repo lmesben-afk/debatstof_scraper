@@ -19,7 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from db.database import get_db_path, get_feedback_bonus_by_topic
+from db.database import get_db_path
 from core.models import DebateItem
 from run_scraper import detect_micro_topics, calculate_story_potential, classify_themes
 
@@ -49,9 +49,6 @@ def rescore_all() -> None:
     ).fetchall()
 
     total = len(rows)
-    topic_bonus = get_feedback_bonus_by_topic()
-    if topic_bonus:
-        print(f"Læringsbonus aktiv for {len(topic_bonus)} mikroemner: {topic_bonus}")
     print(f"Fandt {total} artikler — starter rescoring ...")
 
     updates = []
@@ -73,7 +70,7 @@ def rescore_all() -> None:
 
         micro = detect_micro_topics(item.title, item.deck)
         temaer = classify_themes(item.title, item.deck)
-        score, signals = calculate_story_potential(item, topic_bonus=topic_bonus)
+        score, signals = calculate_story_potential(item)
 
         updates.append((
             json.dumps([t["mikroemne"] for t in micro], ensure_ascii=False),
@@ -85,9 +82,32 @@ def rescore_all() -> None:
 
     with conn:
         conn.executemany(UPDATE_SQL, updates)
+        from core.editorial import SCORING_VERSION
+        conn.execute('CREATE TABLE IF NOT EXISTS scoring_metadata (key TEXT PRIMARY KEY,value TEXT)')
+        conn.execute("INSERT OR REPLACE INTO scoring_metadata VALUES ('version',?)", (SCORING_VERSION,))
 
     conn.close()
     print(f"Opdaterede {total} artikler i {db_path.name}")
+
+
+def ensure_current_scoring():
+    """Back up once and rescore the archive before serving a new rule version."""
+    from core.editorial import SCORING_VERSION
+    path = get_db_path()
+    if not path.exists():
+        return
+    with sqlite3.connect(path) as conn:
+        conn.execute('CREATE TABLE IF NOT EXISTS scoring_metadata (key TEXT PRIMARY KEY,value TEXT)')
+        row = conn.execute("SELECT value FROM scoring_metadata WHERE key='version'").fetchone()
+        if row and row[0] == SCORING_VERSION:
+            return
+        folder = path.parent / 'backups'
+        folder.mkdir(parents=True, exist_ok=True)
+        backup = folder / ('before-' + SCORING_VERSION + '.db')
+        if not backup.exists():
+            with sqlite3.connect(backup) as target:
+                conn.backup(target)
+    rescore_all()
 
 
 if __name__ == "__main__":

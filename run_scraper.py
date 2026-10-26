@@ -853,79 +853,12 @@ def detect_jp_value_signals(text: str) -> list[str]:
 
 
 def calculate_story_potential(item: DebateItem, topic_bonus: dict = None) -> tuple[int, list[str]]:
+    """Versioned editorial rules; personal feedback is applied once in the display layer.
+
+    topic_bonus is retained for caller compatibility, but never added to stored scores.
     """
-    JP-orienteret historiepotentiale-score.
-    7 faktorer: JP-værdier, navngiven aktør, regional medie, mikroemner,
-    konflikt, debatformat og manglende forfatter.
-    """
-    score = 0
-    reasons = []
-
-    text = f"{item.title or ''} {item.deck or ''}".lower()
-
-    entities = extract_entities(item.title, item.deck)
-    micro_topics = detect_micro_topics(item.title, item.deck)
-
-    # Faktor 1: JP-kerneværdier (+20)
-    jp_signals = detect_jp_value_signals(text)
-    core_jp_signals = {
-        "frihed_og_frit_valg", "personligt_ansvar", "erhvervsliv_og_vækst",
-        "skat_og_afgifter", "land_og_by",
-    }
-    if any(s in core_jp_signals for s in jp_signals):
-        score += 20
-        readable = {
-            "frihed_og_frit_valg": "Frit valg",
-            "personligt_ansvar": "Personligt ansvar",
-            "erhvervsliv_og_vækst": "Erhvervsliv/vækst",
-            "skat_og_afgifter": "Skat/afgifter",
-            "land_og_by": "Land og by",
-        }
-        hits = [readable[s] for s in jp_signals if s in readable]
-        if hits:
-            reasons.append(f"JP-kerneværdi: {', '.join(hits)}")
-
-
-    # Faktor 3: Regionalt medie (+10)
-    if item.media_type == "regional":
-        score += 10
-        reasons.append("Regionalt medie")
-
-    # Faktor 4: Aktive mikroemner (+10 pr. emne, maks +30)
-    micro_bonus = min(len(micro_topics) * 10, 30)
-    if micro_bonus > 0:
-        score += micro_bonus
-        labels = [t["mikroemne"].replace("_", " ") for t in micro_topics[:3]]
-        reasons.append(f"Mikroemne: {', '.join(labels)}")
-
-    # Faktor 5: Konflikt/uenighed (+10)
-    conflict_hits = sum(1 for keyword in CONFLICT_KEYWORDS if keyword in text)
-    if conflict_hits:
-        score += 10
-        reasons.append("Konflikt/uenighed")
-
-    # Faktor 6: Debatformat (+10)
-    debate_formats = {"kronik", "kommentar", "læserbrev", "debat", "analyse", "leder"}
-    if item.debate_type and item.debate_type.lower() in debate_formats:
-        score += 10
-        reasons.append(f"Format: {item.debate_type}")
-
-
-    # Faktor 8: Læringsbonus fra stjernemarkeringer (maks +15)
-    if topic_bonus and micro_topics:
-        bonus = max((topic_bonus.get(t["mikroemne"], 0) for t in micro_topics), default=0)
-        if bonus > 0:
-            score += bonus
-            reasons.append(f"Læringsbonus: +{bonus}")
-
-    # Begræns til 0-100 og fjern dubletter
-    score = max(0, min(score, 100))
-    deduped_reasons = []
-    for reason in reasons:
-        if reason not in deduped_reasons:
-            deduped_reasons.append(reason)
-
-    return score, deduped_reasons
+    from core.editorial import editorial_score
+    return editorial_score(item, detect_micro_topics(item.title, item.deck))
 
 
 def story_potential_reason_text(item: DebateItem) -> str:
@@ -1447,58 +1380,20 @@ MICRO_TOPIC_PATTERNS = {
     ],
 }
 
+from core.editorial import TOPIC_KEYWORDS, STRONG_TOPICS, keyword_hits
+MICRO_TOPIC_PATTERNS.update(TOPIC_KEYWORDS)
+
+
 def detect_micro_topics(title: str, deck: str = "") -> list[dict]:
-    """
-    Finder konkrete debatspor baseret på keyword-clusters.
-    """
-    text = f"{title or ''} {deck or ''}".lower()
+    """Distinct word/phrase matches; short generic words alone do not create a topic."""
+    text = f"{title or ''} {deck or ''}"
     found = []
+    for name, keywords in MICRO_TOPIC_PATTERNS.items():
+        hits = keyword_hits(text, keywords)
+        if len(hits) >= 2 or any(hit in STRONG_TOPICS or len(hit) >= 7 for hit in hits):
+            found.append({'mikroemne': name, 'keywords': hits, 'score': len(hits)})
+    return sorted(found, key=lambda topic: topic['score'], reverse=True)
 
-    for topic_name, keywords in MICRO_TOPIC_PATTERNS.items():
-        hits = [kw for kw in keywords if kw in text]
-
-        # Som udgangspunkt kræver vi mindst to hits.
-        # Enkelte meget præcise mikroemner kan accepteres med ét stærkt hit,
-        # hvis rubrikken/manchetten tydeligt bærer emnet.
-        strong_single_hit_topics = {
-            "drikkevand_og_landbrug",
-            "retssikkerhed_og_udvisning",
-            "fagbevægelse_og_medlemskrise",
-            "ulvedebat",
-            "arv_og_arveafgift",
-            "asbestforbud_og_boligejere",
-            "psykiatri_og_mental_sundhed",
-            "unges_trivsel_og_skærme",
-            "frit_valg_og_privatisering",
-            "ældreplejen_og_kommuner",
-            "lobbyisme_og_demokrati",
-            "udenlandsk_indflydelse_og_propaganda",
-            "ai_og_digitalisering",
-            "arbejdsmarked_og_uddannelse",
-            "grønland_og_rigsfællesskab",
-            "boligkrise_og_lokalplaner",
-            "energi_og_forsyning",
-            "klima_og_bæredygtighed",
-            "land_og_by",
-            "skat_og_afgifter",
-            "integration_og_danskhed",
-            "sundhedsvæsen_og_patientrettigheder",
-            "trafik_og_infrastruktur",
-            "udenrigspolitik_og_sikkerhed",
-            "socialpolitik_og_fattigdom",
-            "ytringsfrihed_og_medier",
-            "opdragelse_og_forældreskab",
-        }
-
-        if len(hits) >= 2 or (topic_name in strong_single_hit_topics and len(hits) >= 1):
-            found.append({
-                "mikroemne": topic_name,
-                "keywords": sorted(set(hits)),
-                "score": len(hits),
-            })
-
-    found.sort(key=lambda x: x["score"], reverse=True)
-    return found
 
 def micro_topics_as_text(title: str, deck: str = "") -> str:
     topics = detect_micro_topics(title, deck)

@@ -48,11 +48,11 @@
     <div class="article-card{% if article.opened %} card-opened{% endif %}">
 
       <div class="card-score">
-        {% if s > 80 %}
+        {% if article.score_level == 'høj' %}
         <span class="score-num score-high">{{ s }}</span>
-        {% elif s >= 60 %}
+        {% elif article.score_level == 'interessant' %}
         <span class="score-num score-mid">{{ s }}</span>
-        {% elif s >= 40 %}
+        {% elif article.score_level == 'overvåg' %}
         <span class="score-num score-blue">{{ s }}</span>
         {% else %}
         <span class="score-num score-low">{{ s }}</span>
