@@ -4,7 +4,8 @@
   <div class="content-header">
     <div class="content-header-left">
       <h1 class="content-title">
-        {% if nav_active == 'topscorere' %}Topscorere
+        {% if nav_active == 'arkiv' %}Arkiv – alle artikler
+        {% elif nav_active == 'topscorere' %}Topscorere
         {% elif nav_active == 'interessante' %}Interessante
         {% elif nav_active == 'prioriterede' %}Prioriterede
         {% else %}Seneste 7 dage{% endif %}
@@ -79,6 +80,7 @@
       <div class="card-actions">
         <form method="post" action="/interesting">
           <input type="hidden" name="url" value="{{ article.url }}">
+          <input type="hidden" name="return_to" value="{{ request.full_path }}">
           <button class="star-btn{% if article.interesting %} star-active{% endif %}" type="submit" title="Markér interessant">
             {% if article.interesting %}
             <svg width="18" height="18" viewBox="0 0 20 20" fill="#E0A52E" stroke="#E0A52E" stroke-width="1.4">
@@ -109,4 +111,12 @@
 
   </div>
 
+{% if nav_active == 'arkiv' %}
+<div style="padding:24px; display:flex; gap:24px;">
+  {% set args = request.args.to_dict() %}
+  {% if page > 1 %}{% set _ = args.update({'page': page - 1}) %}<a href="/arkiv?{{ args | urlencode }}">Forrige side</a>{% endif %}
+  <span>Side {{ page }} af {{ pages }}</span>
+  {% if page < pages %}{% set _ = args.update({'page': page + 1}) %}<a href="/arkiv?{{ args | urlencode }}">Næste side</a>{% endif %}
+</div>
+{% endif %}
 {% endblock %}

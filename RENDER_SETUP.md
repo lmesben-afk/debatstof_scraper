@@ -95,3 +95,19 @@ python run_scraper.py --dry-run --only Altinget --limit-per-source 1
 
 `--dry-run` skriver stadig JSON. Brug en separat `DATA_DIR` ved eksperimenter, så
 produktionsfiler ikke erstattes. Statistik kan vises med `python run_scraper.py --db-stats`.
+
+## Importér en tidligere database
+
+Åbn `/import` i appen, mens du er logget ind. Vælg din gamle `debatstof.db` og
+klik **Importér artikler**. Filen uploades direkte til din Render-tjeneste og
+slettes fra den midlertidige uploadmappe efter behandlingen. Den lægges ikke i GitHub.
+
+Importen tager først en sikkerhedskopi af den aktive SQLite-database i
+`/var/data/backups/`. Derefter tilføjes artikler, som ikke allerede findes via id
+eller normaliseret URL. Eksisterende artikler og feedback overskrives ikke.
+Gamle feedbackmarkeringer tilføjes kun for URL'er, som endnu ikke har feedback.
+Gentaget import skaber ikke dubletter. Historiske kørselslogs importeres ikke.
+
+Under **Arkiv – alle artikler** vises både gamle og nye artikler, 100 pr. side.
+Forsiden beholder sin afgrænsning til de seneste syv dage. I arkivet kan du også
+filtrere efter medie, debatspor og interessante artikler.

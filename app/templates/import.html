@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="content-header"><h1>Importér gamle artikler</h1></div>
+<div style="padding: 24px; max-width: 800px; line-height: 1.7;">
+  <p>Vælg din gamle <strong>debatstof.db</strong>. Artiklerne føjes til arkivet.
+  Nuværende artikler og stjernemarkeringer bevares, og dubletter springes over.</p>
+  <p>Der tages automatisk en sikkerhedskopi før importen. Originalfilen ændres ikke.</p>
+  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+  {% if result %}
+  <p role="status"><strong>Importen er færdig.</strong> {{ result.articles }} artikler tilføjet,
+    {{ result.skipped }} dubletter sprunget over og {{ result.feedback }} feedbackmarkeringer tilføjet.</p>
+  <p>Sikkerhedskopi: {{ result.backup }}</p>
+  <p><a href="/arkiv">Åbn arkivet med alle artikler</a></p>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="token" value="{{ token }}">
+    <label for="database">Vælg databasefil (højst 32 MB)</label><br>
+    <input id="database" name="database" type="file" accept=".db,.sqlite,.sqlite3" required>
+    <button type="submit">Importér artikler</button>
+  </form>
+</div>
+{% endblock %}

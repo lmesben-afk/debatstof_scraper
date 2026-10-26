@@ -44,7 +44,7 @@
       </li>
 
       <li>
-        <a href="/?interesting=1" class="nav-item {% if nav_active == 'interessante' %}nav-active{% endif %}">
+        <a href="{{ '/arkiv' if nav_active == 'arkiv' else '/' }}?interesting=1" class="nav-item {% if nav_active == 'interessante' %}nav-active{% endif %}">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9">
             <polygon points="10,2 12.4,7.6 18.5,8.3 14,12.5 15.3,18.5 10,15.4 4.7,18.5 6,12.5 1.5,8.3 7.6,7.6"/>
           </svg>
@@ -66,7 +66,7 @@
           <ul class="nav-sub">
             {% for raw, label in micro_options %}
             <li>
-              <a href="/?micro={{ raw }}"
+              <a href="{{ '/arkiv' if nav_active == 'arkiv' else '/' }}?micro={{ raw }}"
                  class="nav-sub-item {% if micro == raw %}nav-sub-active{% endif %}">
                 {{ label }}
               </a>
@@ -92,7 +92,7 @@
           <ul class="nav-sub">
             {% for medie_navn in alle_medier %}
             <li>
-              <a href="/?medie={{ medie_navn | urlencode }}"
+              <a href="{{ '/arkiv' if nav_active == 'arkiv' else '/' }}?medie={{ medie_navn | urlencode }}"
                  class="nav-sub-item {% if medie_filter == medie_navn %}nav-sub-active{% endif %}">
                 {{ medie_navn }}
               </a>
@@ -122,6 +122,8 @@
         </a>
       </li>
 
+      <li><a href="/arkiv" class="nav-item {% if nav_active == 'arkiv' %}nav-active{% endif %}">Arkiv – alle artikler</a></li>
+      <li><a href="/import" class="nav-item {% if nav_active == 'import' %}nav-active{% endif %}">Importér gamle artikler</a></li>
     </ul>
 
   </nav>

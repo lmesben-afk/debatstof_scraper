@@ -403,8 +403,10 @@ def _load_articles():
 
 
 @app.route("/")
+@app.route("/arkiv")
 def index():
-    data, articles = _load_articles()
+    archive = request.path == "/arkiv"
+    data, articles = _load_all_articles() if archive else _load_articles()
 
     micro           = request.args.get("micro", "")
     level           = request.args.get("level", "")
@@ -437,7 +439,14 @@ def index():
     else:
         nav_active = "overblik"
 
+    if archive:
+        nav_active = "arkiv"
     shared = _shared_template_vars(articles, micro, level, interesting_only, medie_filter)
+    page = max(1, request.args.get("page", 1, type=int))
+    pages = max(1, (len(filtered) + 99) // 100) if archive else 1
+    page = min(page, pages)
+    if archive:
+        filtered = filtered[(page - 1) * 100:page * 100]
 
     return render_template(
         "index.html",
@@ -447,6 +456,8 @@ def index():
         nav_active=nav_active,
         sort_dir=sort_dir,
         sort_by=sort_by,
+        page=page,
+        pages=pages,
         **shared,
     )
 
@@ -534,7 +545,7 @@ def statistik():
 def mark_open():
     url = request.args.get("url", "")
 
-    feedback = load_feedback()
+    feedback = {**load_feedback(), **get_all_feedback_from_db()}
 
     item = feedback.get(url, {})
     item["opened"] = True
@@ -563,7 +574,7 @@ def mark_open():
 def mark_interesting():
     url = request.form.get("url", "")
 
-    feedback = load_feedback()
+    feedback = {**load_feedback(), **get_all_feedback_from_db()}
 
     item = feedback.get(url, {})
     item["interesting"] = not item.get("interesting", False)
@@ -590,7 +601,49 @@ def mark_interesting():
         feedback_label=item.get("feedback_label") or "",
     )
 
-    return redirect("/")
+    target = request.form.get("return_to", "/")
+    if not (target == "/arkiv" or target.startswith("/arkiv?")):
+        target = "/"
+    return redirect(target)
+
+
+# A short-lived form token protects database uploads, including older browsers.
+import secrets
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+_import_tokens = URLSafeTimedSerializer(secrets.token_hex(32), salt="database-import")
+
+
+@app.route("/import", methods=["GET", "POST"])
+def import_old_database():
+    import sqlite3
+    import tempfile
+    from flask import abort
+    from db.import_database import import_database
+    request.max_content_length = 32 * 1024 * 1024
+    result = None
+    error = None
+    if request.method == "POST":
+        try:
+            _import_tokens.loads(request.form.get("token", ""), max_age=3600)
+        except (BadSignature, SignatureExpired):
+            abort(400, "Formularen er udløbet. Åbn importsiden igen.")
+        upload = request.files.get("database")
+        if upload is None or not upload.filename:
+            error = "Vælg din gamle databasefil først."
+        else:
+            try:
+                with tempfile.TemporaryDirectory() as folder:
+                    path = Path(folder) / "import.db"
+                    upload.save(path)
+                    result = import_database(path)
+            except ValueError as exc:
+                error = str(exc)
+            except (OSError, sqlite3.DatabaseError):
+                app.logger.exception("Databaseimport fejlede")
+                error = "Importen mislykkedes. Dine eksisterende data er bevaret. Se serverens log."
+    shared = _shared_template_vars([], "", "", False, "")
+    return render_template("import.html", nav_active="import", result=result, error=error,
+                           token=_import_tokens.dumps("upload"), **shared), (400 if error else 200)
 
 
 if __name__ == "__main__":
