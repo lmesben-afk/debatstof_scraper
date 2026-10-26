@@ -35,7 +35,8 @@ def index(app):
     if not active:
         rss.mark_viewed(app, source)
     for article in articles:
-        article['time'] = display_time(article['published_at'] or article['fetched_at'])
+        article['time'] = (dt.datetime.fromtimestamp(article['published_at'], rss.TIMEZONE).strftime('%H:%M')
+                           if app == 'tv2' else display_time(article['published_at'] or article['fetched_at']))
     return render_template('rss.html', nav_active='rss-' + app, micro_options=[], alle_medier=[],
                            app_id=app,title=rss.TITLES[app],sources=rss.SOURCES[app],source=source,
                            articles=articles,counts=counts,new_counts=new_counts,total=sum(counts.values()),

@@ -5,3 +5,15 @@
 .rss-card { min-height: 90px; }
 .rss-badge { border-radius: 4px; padding: 2px 6px; background: #e7f1ec; color: #086859; font-size: 11px; }
 button:disabled { opacity: .6; cursor: wait; }
+.rss-tools-compact { padding-top: 8px; padding-bottom: 8px; font-size: 13px; }
+.rss-regions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.rss-region { padding: 5px 9px; border: 1px solid #d6cdbc; border-radius: 5px; color: #344054; text-decoration: none; font-size: 12px; }
+.rss-region span { margin-left: 4px; font-weight: 600; }
+.rss-region-active { background: #087f6d; border-color: #087f6d; color: white; }
+.rss-tv2-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 4px; border-bottom: 1px solid #e7e2d8; }
+.rss-tv2-time { flex: 0 0 42px; color: #667085; font-size: 12px; font-variant-numeric: tabular-nums; }
+.rss-tv2-row .rss-badge { flex: 0 0 40px; padding: 1px 4px; text-align: center; font-size: 9px; }
+.rss-tv2-row a { color: #101828; font-size: 14px; line-height: 1.35; text-decoration: none; }
+.rss-tv2-row a:hover { text-decoration: underline; }
+.rss-tv2-read a { color: #7a807e; }
+@media (max-width: 600px) { .rss-tv2-row { gap: 6px; } .rss-tv2-row a { font-size: 13px; } }

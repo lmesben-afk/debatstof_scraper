@@ -178,6 +178,10 @@ def refresh(app, path=None):
                     continue
                 with connect(path) as conn:
                     for article in articles:
+                        if app == 'tv2':
+                            start, end = day_bounds(day)
+                            if not start <= article['published_at'] < end:
+                                continue
                         inserted = conn.execute('''INSERT OR IGNORE INTO articles
                             (app,source,guid,day,title,url,teaser,fetched_at,published_at)
                             VALUES (?,?,?,?,?,?,?,?,?)''', (app, source, article['guid'], day,
@@ -214,16 +218,32 @@ def claim_refresh(app):
     return True
 
 
+def day_bounds(day):
+    date = dt.date.fromisoformat(day)
+    start = dt.datetime.combine(date, dt.time.min, tzinfo=TIMEZONE)
+    end = dt.datetime.combine(date + dt.timedelta(days=1), dt.time.min, tzinfo=TIMEZONE)
+    return start.timestamp(), end.timestamp()
+
+
 def view(app, source):
     day = today()
+    where = 'a.app=? AND a.day=?'
+    params = [app, day]
+    order = 'a.fetched_at DESC,a.published_at DESC'
+    if app == 'tv2':
+        start, end = day_bounds(day)
+        where += ' AND a.published_at>=? AND a.published_at<?'
+        params += [start, end]
+        order = 'a.published_at DESC,a.fetched_at DESC'
     with connect() as conn:
-        rows = conn.execute('SELECT * FROM articles WHERE app=? AND day=? AND source=? ORDER BY fetched_at DESC,published_at DESC',
-                            (app,day,source)).fetchall()
-        counts = {r['source']: r['n'] for r in conn.execute('SELECT source,count(*) n FROM articles WHERE app=? AND day=? GROUP BY source',(app,day))}
+        rows = conn.execute(f'SELECT a.* FROM articles a WHERE {where} AND a.source=? ORDER BY {order}',
+                            [*params, source]).fetchall()
+        counts = {r['source']: r['n'] for r in conn.execute(
+            f'SELECT a.source,count(*) n FROM articles a WHERE {where} GROUP BY a.source', params)}
         seen = conn.execute('SELECT viewed_at FROM views WHERE app=? AND source=? AND day=?',(app,source,day)).fetchone()
-        new_counts = {r['source']: r['n'] for r in conn.execute('''SELECT a.source,count(*) n FROM articles a
+        new_counts = {r['source']: r['n'] for r in conn.execute(f'''SELECT a.source,count(*) n FROM articles a
             LEFT JOIN views v ON v.app=a.app AND v.source=a.source AND v.day=a.day
-            WHERE a.app=? AND a.day=? AND a.fetched_at>COALESCE(v.viewed_at,0) GROUP BY a.source''',(app,day))}
+            WHERE {where} AND a.fetched_at>COALESCE(v.viewed_at,0) GROUP BY a.source''',params)}
         job = conn.execute('SELECT * FROM refresh WHERE app=?',(app,)).fetchone()
     articles = [dict(r, is_new=r['fetched_at'] > (seen['viewed_at'] if seen else 0)) for r in rows]
     return articles, counts, new_counts, dict(job) if job else None

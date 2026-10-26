@@ -150,3 +150,10 @@ læsemarkering efter genindlæsning/genstart samme dag. Live RSS var afvist af
 Codex-netværksproxyen under udvikling og skal derfor verificeres på Render.
 De automatiske tests bruger prøvefeeds og verificerer baggrundsjob, dagsskift,
 læsemarkeringer, genstart, dubletter og eksisterende debatstoffunktioner.
+
+TV 2-visningen er afgrænset til artikler med udgivelsestidspunkt inden for den
+aktuelle danske kalenderdag. Ældre artikler i et feed vises og optælles ikke,
+selv om de først blev indsamlet i dag. Manglende udgivelsesdato udelades ved nye
+TV 2-opdateringer. Listen sorteres efter udgivelsestid, nyeste først. Regionknapper
+viser antal for samme afgrænsning. Kompakte rækker viser tid, læsestatus og rubrik;
+manchetten kan læses ved at holde musen over rubrikken.
