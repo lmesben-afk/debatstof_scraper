@@ -1,0 +1,25 @@
+{% set debate_path = '/arkiv' if request.path == '/arkiv' else '/' %}
+<nav class="debate-tabs" aria-label="Debatstof-menu">
+  <a href="/" class="debate-tab {% if nav_active == 'overblik' %}debate-tab-active{% endif %}">Seneste 7 dage</a>
+  <a href="{{ debate_path }}?interesting=1" class="debate-tab {% if interesting_only %}debate-tab-active{% endif %}">Interessante</a>
+  <details class="debate-dropdown">
+    <summary class="debate-tab {% if micro %}debate-tab-active{% endif %}">Debatspor <span aria-hidden="true">▾</span></summary>
+    <div class="debate-dropdown-links">
+      {% for raw, label in micro_options %}
+      <a href="{{ debate_path }}?{{ {'micro': raw} | urlencode }}" {% if micro == raw %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% else %}<span>Ingen debatspor i denne visning endnu.</span>{% endfor %}
+    </div>
+  </details>
+  <details class="debate-dropdown">
+    <summary class="debate-tab {% if medie_filter %}debate-tab-active{% endif %}">Medier <span aria-hidden="true">▾</span></summary>
+    <div class="debate-dropdown-links">
+      {% for name in alle_medier %}
+      <a href="{{ debate_path }}?{{ {'medie': name} | urlencode }}" {% if medie_filter == name %}aria-current="page"{% endif %}>{{ name }}</a>
+      {% endfor %}
+    </div>
+  </details>
+  <a href="/topscorere" class="debate-tab {% if nav_active == 'topscorere' %}debate-tab-active{% endif %}">Topscorere</a>
+  <a href="/statistik" class="debate-tab {% if nav_active == 'statistik' %}debate-tab-active{% endif %}">Statistik</a>
+  <a href="/arkiv" class="debate-tab {% if nav_active == 'arkiv' and not interesting_only and not micro and not medie_filter %}debate-tab-active{% endif %}">Arkiv – alle artikler</a>
+  <a href="/import" class="debate-tab {% if nav_active == 'import' %}debate-tab-active{% endif %}">Importér gamle artikler</a>
+</nav>

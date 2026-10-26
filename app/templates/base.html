@@ -30,108 +30,17 @@
     </div>
 
     <ul class="nav-list">
-      <li><a href="/rss/tv2" class="nav-item {% if nav_active == 'rss-tv2' %}nav-active{% endif %}">TV 2-regionerne</a></li>
-      <li><a href="/rss/international" class="nav-item {% if nav_active == 'rss-international' %}nav-active{% endif %}">Internationale medier</a></li>
-      <li><span class="nav-item">Debatstof</span></li>
-
-      <li>
-        <a href="/" class="nav-item {% if nav_active == 'overblik' %}nav-active{% endif %}">
-          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9">
-            <rect x="2" y="2" width="7" height="7" rx="1.2"/>
-            <rect x="11" y="2" width="7" height="7" rx="1.2"/>
-            <rect x="2" y="11" width="7" height="7" rx="1.2"/>
-            <rect x="11" y="11" width="7" height="7" rx="1.2"/>
-          </svg>
-          Seneste 7 dage
-        </a>
-      </li>
-
-      <li>
-        <a href="{{ '/arkiv' if nav_active == 'arkiv' else '/' }}?interesting=1" class="nav-item {% if nav_active == 'interessante' %}nav-active{% endif %}">
-          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9">
-            <polygon points="10,2 12.4,7.6 18.5,8.3 14,12.5 15.3,18.5 10,15.4 4.7,18.5 6,12.5 1.5,8.3 7.6,7.6"/>
-          </svg>
-          Interessante
-        </a>
-      </li>
-
-<li class="nav-group">
-        <details {% if nav_active == 'debatspor' %}open{% endif %}>
-          <summary class="nav-item nav-summary {% if nav_active == 'debatspor' %}nav-active{% endif %}">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9">
-              <path d="M3 7h9l3 3-3 3H3V7z"/>
-            </svg>
-            Debatspor
-            <svg class="nav-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9">
-              <polyline points="3,4 6,8 9,4"/>
-            </svg>
-          </summary>
-          <ul class="nav-sub">
-            {% for raw, label in micro_options %}
-            <li>
-              <a href="{{ '/arkiv' if nav_active == 'arkiv' else '/' }}?micro={{ raw }}"
-                 class="nav-sub-item {% if micro == raw %}nav-sub-active{% endif %}">
-                {{ label }}
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-        </details>
-      </li>
-
-      <li class="nav-group">
-        <details {% if nav_active == 'medier' %}open{% endif %}>
-          <summary class="nav-item nav-summary {% if nav_active == 'medier' %}nav-active{% endif %}">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9">
-              <rect x="2" y="4" width="16" height="13" rx="1.2"/>
-              <line x1="2" y1="8" x2="18" y2="8"/>
-              <line x1="6" y1="8" x2="6" y2="17"/>
-            </svg>
-            Medier
-            <svg class="nav-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9">
-              <polyline points="3,4 6,8 9,4"/>
-            </svg>
-          </summary>
-          <ul class="nav-sub">
-            {% for medie_navn in alle_medier %}
-            <li>
-              <a href="{{ '/arkiv' if nav_active == 'arkiv' else '/' }}?medie={{ medie_navn | urlencode }}"
-                 class="nav-sub-item {% if medie_filter == medie_navn %}nav-sub-active{% endif %}">
-                {{ medie_navn }}
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-        </details>
-      </li>
-
-      <li>
-        <a href="/topscorere" class="nav-item {% if nav_active == 'topscorere' %}nav-active{% endif %}">
-          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9">
-            <polyline points="2,14 6,8 10,10 14,4 18,6"/>
-          </svg>
-          Topscorere
-        </a>
-      </li>
-
-      <li>
-        <a href="/statistik" class="nav-item {% if nav_active == 'statistik' %}nav-active{% endif %}">
-          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9">
-            <rect x="3" y="12" width="3" height="6" rx="0.5"/>
-            <rect x="8.5" y="7" width="3" height="11" rx="0.5"/>
-            <rect x="14" y="3" width="3" height="15" rx="0.5"/>
-          </svg>
-          Statistik
-        </a>
-      </li>
-
-      <li><a href="/arkiv" class="nav-item {% if nav_active == 'arkiv' %}nav-active{% endif %}">Arkiv – alle artikler</a></li>
-      <li><a href="/import" class="nav-item {% if nav_active == 'import' %}nav-active{% endif %}">Importér gamle artikler</a></li>
+      <li><a href="/" class="nav-item {% if not request.path.startswith('/rss/') %}nav-active{% endif %}" {% if not request.path.startswith('/rss/') %}aria-current="page"{% endif %}>Debatstof</a></li>
+      <li><a href="/rss/tv2" class="nav-item {% if nav_active == 'rss-tv2' %}nav-active{% endif %}" {% if nav_active == 'rss-tv2' %}aria-current="page"{% endif %}>TV 2-regionerne</a></li>
+      <li><a href="/rss/international" class="nav-item {% if nav_active == 'rss-international' %}nav-active{% endif %}" {% if nav_active == 'rss-international' %}aria-current="page"{% endif %}>Internationale medier</a></li>
     </ul>
 
   </nav>
 
   <div class="main-content">
+    {% if not request.path.startswith('/rss/') %}
+      {% include "debate_nav.html" %}
+    {% endif %}
     {% block content %}{% endblock %}
   </div>
 
