@@ -26,9 +26,10 @@ from dateutil import parser as dateparser
 
 USER_AGENT = "DebatstofResearchBot/0.5"
 DEFAULT_TIMEOUT = 20
-DEFAULT_JSON_OUTPUT = str(Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Fælles-data") / "articles.json")
-DEFAULT_NEW_JSON_OUTPUT = str(Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Fælles-data") / "new_articles.json")
-CONFIG_DIR = Path(r"C:/Users/Esben.L.Mikkelsen/OneDrive - JP Politikens Hus/Jyllands-Posten/Scrapere/Config-filer")
+from core.settings import DATA_DIR, CONFIG_DIR, load_env_file
+
+DEFAULT_JSON_OUTPUT = str(DATA_DIR / "articles.json")
+DEFAULT_NEW_JSON_OUTPUT = str(DATA_DIR / "new_articles.json")
 
 def load_sources(path: str = "sources.yaml") -> List[Source]:
     with open(path, "r", encoding="utf-8") as f:
@@ -1682,27 +1683,8 @@ def load_media_rules() -> Dict[str, Any]:
         return {}
 
 
-def load_env_file(path: str = ".env") -> None:
-    """
-    Læser kun .env fra den faste config-mappe.
+SHARED_DATA_DIR = DATA_DIR
 
-    Lokal .env i versionsmappen bruges ikke længere.
-    """
-    env_path = CONFIG_DIR / ".env"
-
-    if not env_path.exists():
-        raise RuntimeError(f"Fandt ikke .env i config-mappen: {env_path}")
-
-    with env_path.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip())
-
-
-SHARED_DATA_DIR = Path(r"C:\Users\Esben.L.Mikkelsen\OneDrive - JP Politikens Hus\Jyllands-Posten\Scrapere\Fælles-data")
 SHARED_FEEDBACK_FILE = SHARED_DATA_DIR / "feedback.json"
 
 
@@ -2277,7 +2259,7 @@ def print_db_stats() -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Debatstof-scraper")
     parser.add_argument("--db-stats", action="store_true", help="Vis database-statistik og stop. Kører ingen scraping.")
-    parser.add_argument("--dry-run", action="store_true", help="Skriv ikke til Google Sheet")
+    parser.add_argument("--dry-run", action="store_true", help="Skriv CSV/JSON, men ikke SQLite")
     parser.add_argument("--limit-per-source", type=int, default=30, help="Maks antal URL'er pr. kilde i denne kørsel")
     parser.add_argument("--only", type=str, default=None, help="Test kun én kilde, fx Altinget")
     parser.add_argument("--min-section-results", type=int, default=5, help="Hvis debatforsiden giver færre fund end dette, prøves sitemap som backup")

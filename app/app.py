@@ -11,31 +11,15 @@ import os
 from db.database import get_db_path, save_feedback_to_db, get_all_feedback_from_db
 
 
-BASE_DIR      = Path(__file__).resolve().parent.parent
-DATA_FILE     = BASE_DIR / "Fælles-data" / "articles.json"
-FEEDBACK_FILE = BASE_DIR / "Fælles-data" / "feedback.json"
+from core.settings import DATA_DIR
+from app.security import protect_app
+
+BASE_DIR = PROJECT_ROOT
+DATA_FILE = DATA_DIR / "articles.json"
+FEEDBACK_FILE = DATA_DIR / "feedback.json"
 
 app = Flask(__name__)
-
-CONFIG_DIR = BASE_DIR / "Config-filer"
-
-
-def load_env_file():
-    env_path = CONFIG_DIR / ".env"
-
-    if not env_path.exists():
-        print(f"[WARN] Fandt ikke .env: {env_path}")
-        return
-
-    with env_path.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip())
-
-
+protect_app(app)
 
 
 MICRO_TOPIC_LABELS = {

@@ -14,7 +14,8 @@ from pathlib import Path
 from typing import List
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FALLBACK_PATH = _PROJECT_ROOT / "Fælles-data" / "debatstof.db"
+from core.settings import DATA_DIR
+FALLBACK_PATH = DATA_DIR / "debatstof.db"
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS artikler (
@@ -256,7 +257,7 @@ def get_all_feedback_from_db() -> dict:
         }
 
     # Tabel er tom — forsøg migration fra feedback.json
-    feedback_json = Path(__file__).resolve().parents[1] / "Fælles-data" / "feedback.json"
+    feedback_json = DATA_DIR / "feedback.json"
     if not feedback_json.exists():
         return {}
 
@@ -279,6 +280,16 @@ def get_all_feedback_from_db() -> dict:
     except Exception as exc:
         print(f"[WARN] Migration fra feedback.json fejlede: {exc}")
         return {}
+
+
+def initialize_database() -> None:
+    path = get_db_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(path) as conn:
+        conn.execute(CREATE_TABLE_SQL)
+        _migrate_schema(conn)
+        _ensure_feedback_table(conn)
+        _ensure_korselslog_table(conn)
 
 
 def get_db_path() -> Path:

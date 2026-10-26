@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: debatstof-scraper
+    runtime: python
+    region: frankfurt
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python render_start.py
+    healthCheckPath: /healthz
+    disk:
+      name: debatstof-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.14
+      - key: DATA_DIR
+        value: /var/data
+      - key: SQLITE_DB_PATH
+        value: /var/data/debatstof.db
+      - key: SCRAPE_INTERVAL_SECONDS
+        value: "3600"
+      - key: APP_USERNAME
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
