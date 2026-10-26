@@ -17,7 +17,7 @@ class RenderTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.folder = Path(self.tmp.name)
         self.env = patch.dict(os.environ, {
-            'DATA_DIR': self.tmp.name, 'SQLITE_DB_PATH': str(self.folder / 'data.db'),
+            'DATA_DIR': self.tmp.name, 'SQLITE_DB_PATH': str(self.folder / 'data.db'), 'RSS_DB_PATH': str(self.folder / 'rss.db'),
             'APP_USERNAME': 'reader', 'APP_PASSWORD': 'test-only-password', 'RENDER': 'true'})
         self.env.start()
         self.addCleanup(self.env.stop)

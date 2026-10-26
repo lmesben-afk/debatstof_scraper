@@ -111,3 +111,42 @@ Gentaget import skaber ikke dubletter. Historiske kørselslogs importeres ikke.
 Under **Arkiv – alle artikler** vises både gamle og nye artikler, 100 pr. side.
 Forsiden beholder sin afgrænsning til de seneste syv dage. I arkivet kan du også
 filtrere efter medie, debatspor og interessante artikler.
+
+## Alle tre apps på den eksisterende tjeneste
+
+TV 2-regionerne og de internationale medier er integreret i Flask-appen på
+`/rss/tv2` og `/rss/international`. De bruger samme login, server og disk som
+Debatstof. Der skal ikke oprettes en ekstra Render-tjeneste eller installeres
+Streamlit. Startkommando og eksisterende miljøvariabler ændres ikke.
+
+Kildekonfigurationen og RSS-arbejdsgangen er overført fra
+`lmesben-afk/TV2-regioner_scraper` (render-deployment, 2146c2b). Det oprindelige
+repository er bevaret, men behøver ikke deployes separat.
+
+RSS-data gemmes i `DATA_DIR/rss.db`, adskilt fra den eksisterende debatstofdatabase.
+`RSS_DB_PATH` kan valgfrit ændre placeringen; det er ikke nødvendigt på Render.
+RSS-funktionen overskriver ikke debatstofartikler eller feedback.
+
+Klik **Opdater nu** i den ønskede RSS-app. Opdateringen sættes i kø og kører i
+baggrunden; siden viser fremskridt og genindlæses, mens opdateringen er aktiv.
+Der kører højst én RSS-opdatering ad gangen, og op til fire feeds hentes parallelt.
+Du kan fortsat bruge alle sider imens. Dobbeltklik opretter ikke ekstra job.
+Ingen RSS-opdateringer startes automatisk, når siden er lukket.
+
+Dagens artikler og læsemarkeringer gemmes i databasen. Listen viser indsamling
+siden dansk midnat (Europe/Copenhagen), ligesom de tidligere RSS-apps. Artikler
+forsvinder ikke fra dagens liste, fordi de falder ud af feedet. Det samme feed
+skaber ikke dubletter ved gentagen opdatering. “NY” angiver artikler indsamlet
+siden seneste besøg på den pågældende region/medie; åbnede artikler markeres “LÆST”.
+Manchetter tages fra RSS; mangler de, forsøges metadata fra artikelsiden.
+
+Ved en afbrudt opdatering (fx ved deploy) bevares allerede gemte artikler, og siden
+beder om at klikke **Opdater nu** igen. Delvist fejlede feeds vises med navn.
+Et HTTP-sundhedstjek på `/healthz` verificerer serveren, ikke medieadgang.
+
+Første kontrol på Render: log ind, åbn begge RSS-sider, klik **Opdater nu**, og
+kontrollér rigtige artikler og eventuelle mediefejl. Åbn en artikel og kontrollér
+læsemarkering efter genindlæsning/genstart samme dag. Live RSS var afvist af
+Codex-netværksproxyen under udvikling og skal derfor verificeres på Render.
+De automatiske tests bruger prøvefeeds og verificerer baggrundsjob, dagsskift,
+læsemarkeringer, genstart, dubletter og eksisterende debatstoffunktioner.

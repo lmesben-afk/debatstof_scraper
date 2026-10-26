@@ -18,7 +18,7 @@ class ImportTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.folder = Path(self.tmp.name)
         self.target = self.folder / 'active.db'
-        self.env = patch.dict(os.environ, {'SQLITE_DB_PATH': str(self.target),
+        self.env = patch.dict(os.environ, {'SQLITE_DB_PATH': str(self.target), 'RSS_DB_PATH': str(self.folder / 'rss.db'),
                                           'APP_USERNAME': 'reader', 'APP_PASSWORD': 'password'})
         self.env.start()
         self.addCleanup(self.env.stop)

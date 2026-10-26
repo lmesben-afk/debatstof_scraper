@@ -21,6 +21,9 @@ FEEDBACK_FILE = DATA_DIR / "feedback.json"
 app = Flask(__name__)
 protect_app(app)
 
+from app.rss import register as register_rss
+register_rss(app)
+
 
 MICRO_TOPIC_LABELS = {
     "frit_valg_og_privatisering":    "Frit valg og privatisering",

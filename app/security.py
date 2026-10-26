@@ -25,7 +25,7 @@ def protect_app(app):
                     and hmac.compare_digest((auth.password or '').encode(), password.encode())):
                 return Response('Login required', 401,
                                 {'WWW-Authenticate': 'Basic realm="Debatstof", charset="UTF-8"'})
-        if request.method == 'POST' or request.path == '/open':
+        if request.method == 'POST' or request.path == '/open' or request.endpoint == 'rss.open_article':
             origin = request.headers.get('Origin')
             if request.headers.get('Sec-Fetch-Site') == 'cross-site':
                 abort(403)

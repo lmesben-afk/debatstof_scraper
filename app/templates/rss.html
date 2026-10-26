@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='rss.css') }}">
+<div class="content-header">
+  <div><h1 class="content-title">{{ title }}</h1>
+    <p class="content-meta">{{ total }} artikler siden dansk midnat{% if last_updated %} · Sidste opdatering {{ last_updated }}{% endif %}</p>
+  </div>
+  <form method="post" action="{{ url_for('rss.refresh', app=app_id) }}">
+    <input type="hidden" name="token" value="{{ token }}">
+    <input type="hidden" name="source" value="{{ source }}">
+    <button class="btn-sort btn-sort-active" type="submit" {% if active %}disabled{% endif %}>{{ 'Henter artikler…' if active else 'Opdater nu' }}</button>
+  </form>
+</div>
+<section class="rss-tools">
+  <p>Henter dagens artikler fra RSS, når du klikker “Opdater nu”. Dagens liste nulstilles ved dansk midnat.</p>
+  {% if active %}<p role="status">Opdateringen kører i baggrunden. Du kan bruge de andre sider imens. Listen opdateres automatisk.</p>{% endif %}
+  {% if job and job.state == 'finished' %}<p role="status">{{ job.created }} nye artikler ved seneste opdatering.</p>{% endif %}
+  {% if failed_sources %}<p role="alert">Kunne ikke hente: {{ failed_sources | join(', ') }}. Tidligere hentede artikler er bevaret.</p>{% endif %}
+  {% if job and job.state == 'interrupted' %}<p role="alert">Sidste opdatering blev afbrudt af en genstart. Klik “Opdater nu” for at prøve igen.</p>{% endif %}
+  {% if job and job.state == 'error' %}<p role="alert">Opdateringen kunne ikke gennemføres. Du kan prøve igen. Dagens allerede gemte artikler er bevaret.</p>{% endif %}
+  <form method="get">
+    <label for="rss-source">{{ 'Vælg region' if app_id == 'tv2' else 'Vælg medie' }}</label>
+    <select id="rss-source" name="source" onchange="this.form.submit()">
+      {% for name in sources %}<option value="{{ name }}" {% if name == source %}selected{% endif %}>{{ name }} — {{ counts.get(name, 0) }} artikler{% if new_counts.get(name, 0) %}, {{ new_counts[name] }} nye{% endif %}</option>{% endfor %}
+    </select><button type="submit" class="btn-sort">Vis</button>
+  </form>
+</section>
+<div class="article-feed">
+  <h2 class="rss-source-title">{{ source }}</h2>
+  {% for article in articles %}
+  <article class="article-card rss-card {% if article.read %}card-opened{% endif %}">
+    <div class="card-body">
+      <div class="card-meta"><span class="card-medie">{{ article.source }}</span><span>{{ article.time }}</span>
+        <span class="rss-badge">{{ 'LÆST' if article.read else ('NY' if article.is_new else 'ULÆST') }}</span>
+      </div>
+      <a class="card-rubrik" href="{{ url_for('rss.open_article', app=app_id, source=article.source, guid=article.guid) }}" title="{{ article.teaser or article.title }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a>
+      {% if article.teaser %}<p class="card-manchet">{{ article.teaser }}</p>{% endif %}
+    </div>
+  </article>
+  {% else %}<p class="feed-empty">Ingen artikler fra denne kilde endnu i dag. Klik “Opdater nu” for at hente.</p>{% endfor %}
+</div>
+{% if active %}<script>setTimeout(function () { window.location.reload(); }, 5000);</script>{% endif %}
+{% endblock %}
