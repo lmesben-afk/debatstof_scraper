@@ -63,7 +63,7 @@ class RssTests(unittest.TestCase):
         with patch.object(rss, 'today', return_value='2099-01-01'):
             self.assertEqual(rss.view('tv2',source)[0],[])
 
-    def test_tv2_only_published_today_and_compact_view(self):
+    def test_both_apps_only_published_today_and_compact_view(self):
         source = next(iter(rss.SOURCES['tv2']))
         start, end = rss.day_bounds(rss.today())
         with rss.connect() as conn:
@@ -72,20 +72,21 @@ class RssTests(unittest.TestCase):
                                         ('today', start + 3600), ('tomorrow', end), ('unknown', 0)]:
                     conn.execute('''INSERT INTO articles
                         (app,source,guid,day,title,url,teaser,fetched_at,published_at)
-                        VALUES (?,?,?,?,?,?,?,?,?)''', (app,source,guid,rss.today(),guid,
+                        VALUES (?,?,?,?,?,?,?,?,?)''', (app,next(iter(rss.SOURCES[app])),guid,rss.today(),guid,
                         'https://example.com/' + guid,'Manchet i tooltip',time.time(),published))
         articles, counts, new_counts, _ = rss.view('tv2', source)
         self.assertEqual([a['guid'] for a in articles], ['today', 'midnight'])
         self.assertEqual(counts[source], 2)
         self.assertEqual(new_counts[source], 2)
-        self.assertEqual(len(rss.view('international', source)[0]), 5)
-        response = self.client.get('/rss/tv2', headers=self.auth)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('rss-tv2-row', response.text)
-        self.assertIn('rss-regions', response.text)
-        self.assertIn('artikler udgivet i dag', response.text)
-        self.assertNotIn('class="card-manchet"', response.text)
-        self.assertNotIn('>yesterday</a>', response.text)
+        self.assertEqual(len(rss.view('international', next(iter(rss.SOURCES['international'])))[0]), 2)
+        for app in ['tv2', 'international']:
+            response = self.client.get('/rss/' + app, headers=self.auth)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('rss-compact-row', response.text)
+            self.assertIn('rss-regions', response.text)
+            self.assertIn('artikler udgivet i dag', response.text)
+            self.assertNotIn('class="card-manchet"', response.text)
+            self.assertNotIn('>yesterday</a>', response.text)
         # Danish midnight is the previous UTC date in winter.
         import datetime as dt
         self.assertEqual(dt.datetime.fromtimestamp(start, dt.timezone.utc).hour, 23)

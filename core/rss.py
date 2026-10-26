@@ -178,10 +178,9 @@ def refresh(app, path=None):
                     continue
                 with connect(path) as conn:
                     for article in articles:
-                        if app == 'tv2':
-                            start, end = day_bounds(day)
-                            if not start <= article['published_at'] < end:
-                                continue
+                        start, end = day_bounds(day)
+                        if not start <= article['published_at'] < end:
+                            continue
                         inserted = conn.execute('''INSERT OR IGNORE INTO articles
                             (app,source,guid,day,title,url,teaser,fetched_at,published_at)
                             VALUES (?,?,?,?,?,?,?,?,?)''', (app, source, article['guid'], day,
@@ -229,12 +228,10 @@ def view(app, source):
     day = today()
     where = 'a.app=? AND a.day=?'
     params = [app, day]
-    order = 'a.fetched_at DESC,a.published_at DESC'
-    if app == 'tv2':
-        start, end = day_bounds(day)
-        where += ' AND a.published_at>=? AND a.published_at<?'
-        params += [start, end]
-        order = 'a.published_at DESC,a.fetched_at DESC'
+    start, end = day_bounds(day)
+    where += ' AND a.published_at>=? AND a.published_at<?'
+    params += [start, end]
+    order = 'a.published_at DESC,a.fetched_at DESC'
     with connect() as conn:
         rows = conn.execute(f'SELECT a.* FROM articles a WHERE {where} AND a.source=? ORDER BY {order}',
                             [*params, source]).fetchall()
