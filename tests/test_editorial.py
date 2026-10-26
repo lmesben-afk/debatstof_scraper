@@ -24,6 +24,16 @@ class EditorialTests(unittest.TestCase):
                 self.assertGreater(strong_score,calculate_story_potential(article(weak))[0])
                 self.assertTrue(any('sammenhæng' in reason for reason in reasons))
 
+    def test_partial_evidence_has_intermediate_scores(self):
+        weak = article('Virksomheder er vigtige')
+        partial = article('Virksomheder advarer: investeringer og arbejdspladser er truet')
+        strong = article('Byrådet indfører nye afgiftskrav: virksomheder afviser tab af investeringer og arbejdspladser i Esbjerg')
+        scores = [calculate_story_potential(item)[0] for item in (weak, partial, strong)]
+        self.assertLess(scores[0], scores[1])
+        self.assertLess(scores[1], scores[2])
+        self.assertGreaterEqual(scores[2], 60)
+        self.assertLessEqual(scores[2],100)
+
     def test_source_type_alone_gives_no_bonus_and_no_substring_matches(self):
         title='En principiel diskussion om samfundet'
         self.assertEqual(calculate_story_potential(article(title)),calculate_story_potential(article(title,media_type='regional')))

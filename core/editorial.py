@@ -2,10 +2,10 @@
 from functools import lru_cache
 import re
 
-SCORING_VERSION = 'editorial-2026-10-v2'
+SCORING_VERSION = 'editorial-2026-10-v3'
 SCORE_LEVELS = {'high': 60, 'interesting': 40, 'watch': 20}
-WEIGHTS = {'relevance': 20, 'combination': 25, 'concrete': 15, 'consequences': 10,
-           'conflict': 10, 'geography': 5, 'format': 5}
+WEIGHTS = {'relevance': 30, 'combination': 35, 'evidence': 30,
+           'concrete': 15, 'consequences': 10, 'conflict': 5, 'geography': 5, 'format': 5}
 
 PATTERNS = {
     'Familievalg over for arbejdsmarked og fællesskab': [
@@ -25,18 +25,18 @@ PATTERNS = {
         ['afgift*', 'regulering*', 'regel*', 'krav', 'forbud*', 'tilladelse*', 'mangel', 'forsink*', 'besluttet']],
 }
 DECISIONS = ['indfør*', 'vedtaget', 'besluttet', 'forbyd*', 'forbud*', 'afskaff*', 'nedlæg*',
-             'lukker', 'kræver', 'pålæg*', 'tilladelse*', 'ekspropriation*', 'afviser']
+             'lovforslag*', 'reform*', 'foreslå*', 'planlæg*', 'lukker', 'kræver', 'pålæg*', 'tilladelse*', 'ekspropriation*', 'afviser']
 INSTITUTIONS = ['kommune*', 'byråd*', 'folketing*', 'christiansborg', 'minister*', 'regering*',
-                'myndighed*', 'styrelse*', 'virksomhed*', 'arbejdsgiver*', 'svømmehal*', 'skole*']
+                'ministerie*', 'justitsminister*', 'netselskab*', 'myndighed*', 'styrelse*', 'virksomhed*', 'arbejdsgiver*', 'svømmehal*', 'skole*']
 AFFECTED = ['borger*', 'familie*', 'forældre*', 'virksomhed*', 'beboer*', 'lodsejer*',
-            'medarbejder*', 'landmand*', 'barn', 'børn', 'nabo*', 'arbejdsplads*']
+            'patient*', 'boligejer*', 'iværksæt*', 'forbruger*', 'medarbejder*', 'landmand*', 'barn', 'børn', 'nabo*', 'arbejdsplads*']
 CONSEQUENCES = ['arbejdsplads*', 'arbejdskraft*', 'arbejdsudbud*', 'omkostning*', 'mister',
                 'million*', 'milliard*', 'fyre*', 'konkurs*', 'støj*', 'ekspropriation*',
                 'ejendomsret', 'tilskud*', 'diskrimination*', 'adgang', 'lukker', 'forsink*']
 DISAGREEMENT = ['kritiser*', 'modstand*', 'protest*', 'indsigelse*', 'afviser', 'uenighed',
                 'strid', 'konflikt*', 'forbud*', 'tvang*']
 GEOGRAPHY = ['jylland', 'fyn', 'bornholm', 'landdistrikt*', 'landsby*', 'provinsen', 'udkanten',
-             'nordjylland', 'vestjylland', 'sønderjylland', 'midtjylland', 'lolland', 'falster',
+             'sydsjælland', 'vestsjælland', 'fynbo*', 'nordjylland', 'vestjylland', 'sønderjylland', 'midtjylland', 'lolland', 'falster',
              'aarhus', 'århus', 'aalborg', 'odense', 'esbjerg', 'kolding', 'viborg', 'holstebro',
              'herning', 'aabenraa', 'sønderborg', 'ringkøbing', 'silkeborg', 'nakskov', 'hjørring']
 SPECIFIC_VALUES = ['frit valg', 'valgfrihed', 'selvbestemmelse', 'personligt ansvar', 'ejendomsret',
@@ -72,36 +72,55 @@ def keyword_hits(text, keywords):
 
 
 def editorial_score(item, micro_topics):
+    """Award partial evidence in short texts; each component has its own ceiling."""
     text = f'{item.title or ""} {item.deck or ""}'
-    combinations = [label for label, groups in PATTERNS.items()
-                    if all(keyword_hits(text, group) for group in groups)]
-    concrete = all(keyword_hits(text, group) for group in (DECISIONS, INSTITUTIONS, AFFECTED))
-    consequences = bool(keyword_hits(text, CONSEQUENCES)) and (concrete or bool(combinations))
-    reasons = []
-    score = 0
-    # A word and the topic it identifies share one relevance budget.
-    relevance = max(15 if keyword_hits(text, SPECIFIC_VALUES) else 0,
-                    min(len(micro_topics) * 5, WEIGHTS['relevance']))
+    components = []
+    topic_count = len({topic['mikroemne'] for topic in micro_topics})
+    topic_relevance = min(WEIGHTS['relevance'], 8 + topic_count * 5) if topic_count else 0
+    value_relevance = 25 if keyword_hits(text, SPECIFIC_VALUES) else 0
+    relevance = max(topic_relevance, value_relevance)
     if relevance:
-        score += relevance
-        reasons.append(f'Emne- og værdirelevans: +{relevance}')
-    # Overlapping combinations share one bonus, regardless of viewpoint.
-    if combinations:
-        score += WEIGHTS['combination']
-        reasons.append('Værdier/interesser i sammenhæng: ' + '; '.join(combinations) + ' (+25)')
+        components.append((relevance, 'Emne- og værdirelevans'))
+
+    candidates = []
+    for label, groups in PATTERNS.items():
+        matched = [bool(keyword_hits(text, group)) for group in groups]
+        if not matched[0]:
+            continue
+        if all(matched):
+            points, strength = WEIGHTS['combination'], 'samlet sammenhæng'
+        elif sum(matched) >= 2:
+            points, strength = 20, 'flere hensyn omtalt'
+        else:
+            points, strength = max(0, 10 - relevance), 'relevant spor, begrænset kontekst'
+        candidates.append((points, label + ' (' + strength + ')'))
+    combination = max(candidates, key=lambda c:c[0], default=(0,''))
+    if combination[0]:
+        components.append(combination)
+
+    decision = bool(keyword_hits(text, DECISIONS))
+    institution = bool(keyword_hits(text, INSTITUTIONS))
+    affected = bool(keyword_hits(text, AFFECTED))
+    # A lone actor is not evidence of a decision. A proposal is not an enacted law.
+    concrete = 15 if decision and institution and affected else (10 if decision and (institution or affected) else (3 if decision else 0))
+    consequence_hits = keyword_hits(text, CONSEQUENCES)
+    consequences = min(10, 1 + len(consequence_hits) * 3) if consequence_hits and (affected or decision or combination[0]) else 0
+    conflict = 5 if keyword_hits(text, DISAGREEMENT) and (decision or affected or institution) else 0
+    # Strong combinations already encode opposition, so no extra conflict bonus.
+    if combination[0] == WEIGHTS['combination']:
+        conflict = 0
+    evidence = min(WEIGHTS['evidence'], concrete + consequences + conflict)
     if concrete:
-        score += WEIGHTS['concrete']
-        reasons.append('Signaler om beslutning/praksis med berørte aktører: +15')
+        components.append((concrete, 'Signaler om beslutning, praksis eller forslag'))
     if consequences:
-        score += WEIGHTS['consequences']
-        reasons.append('Mulige konkrete konsekvenser omtalt: +10')
-    if concrete and not combinations and keyword_hits(text, DISAGREEMENT):
-        score += WEIGHTS['conflict']
-        reasons.append('Konflikt om en konkret beslutning: +10')
-    if keyword_hits(text, GEOGRAPHY) and (concrete or combinations):
-        score += WEIGHTS['geography']
-        reasons.append('Geografisk relevans i indholdet: +5')
-    if (item.debate_type or '').casefold() in {'kronik','kommentar','læserbrev','debat','analyse','leder'}:
-        score += WEIGHTS['format']
-        reasons.append('Debatformat: +5')
-    return min(score,100), reasons
+        components.append((consequences, 'Mulige konsekvenser omtalt'))
+    if conflict:
+        components.append((conflict, 'Modstridende interesser eller kritik omtalt'))
+    geography = 5 if keyword_hits(text, GEOGRAPHY) and (relevance or combination[0] or decision) else 0
+    if geography:
+        components.append((geography, 'Geografisk relevans i indholdet'))
+    format_points = 5 if (item.debate_type or '').casefold() in {'kronik','kommentar','læserbrev','debat','analyse','leder'} else 0
+    if format_points:
+        components.append((format_points, 'Debatformat'))
+    score = relevance + combination[0] + evidence + geography + format_points
+    return min(score,100), [f'{label}: +{points}' for points,label in components]
