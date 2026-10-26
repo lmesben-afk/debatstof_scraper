@@ -24,6 +24,9 @@ protect_app(app)
 from app.rss import register as register_rss
 register_rss(app)
 
+from app.analysis_export import bp as analysis_export_blueprint
+app.register_blueprint(analysis_export_blueprint)
+
 
 MICRO_TOPIC_LABELS = {
     "frit_valg_og_privatisering":    "Frit valg og privatisering",

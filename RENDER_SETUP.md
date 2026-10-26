@@ -157,3 +157,29 @@ selv om de først blev indsamlet i dag. Manglende udgivelsesdato udelades ved ny
 RSS-opdateringer. Listen sorteres efter udgivelsestid, nyeste først. Region- og medieknapper
 viser antal for samme afgrænsning. Kompakte rækker viser tid, læsestatus og rubrik;
 manchetten kan læses ved at holde musen over rubrikken.
+
+## Manuel analyse af regler med ChatGPT
+
+Åbn Debatstof → **Eksport til analyse** (eller `/analyse`) og klik
+**Download analysefil**. Vedhæft den downloadede JSON-fil i en ChatGPT-samtale.
+Ingen API bruges, og filen sendes ikke automatisk til nogen modeludbyder.
+
+Eksporten læser hele debatstofdatabasen i én read-only transaktion. Den indeholder
+artiklernes rubrik/manchet/metadata, gemte scorer, genberegnede scorer med aktuelle
+regler, feedback, reglernes faktiske Python-implementering, nøgleord og
+kildekonfiguration. Fuld artikeltekst og RSS-appsnes data medtages ikke. Login og
+`.env`/credentialsfiler læses ikke ind i eksporten. Download kræver samme login
+som resten af appen. Regler, artikler og feedback ændres ikke af eksporten.
+
+Gemte scorer og genberegnede scorer holdes adskilt. Eksporten viser også
+feedbackjusteringen ved arkivvisning og ved syvdagesvisning. Udviklings- og
+kontrolgrupper fordeles deterministisk efter normaliseret URL, så dubletter
+holdes i samme gruppe. Dette er et hjælpemiddel til samtalen og ikke en
+uafhængig, ekspertmærket evaluering. Manglende stjerner er ikke negative labels.
+Den medfølgende samtalevejledning beder først om brugerens redaktionelle mål,
+derefter vurderinger af eksempler, og til sidst konkrete regelforslag.
+
+Prøve med den tidligere database på 2.830 artikler: gyldig JSON på ca. 5,6 MB,
+inklusive regler og 15 feedbackposter. Databasens filhash var uændret efter eksport.
+Store arkiver kan tage lidt tid at samle. Det er den aktuelle database på Render,
+der eksporteres ved download; udviklingsprøven er ikke en kopi af livearkivet.

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="content-header"><h1 class="content-title">Eksport til analyse</h1></div>
+<div style="padding:24px 28px;max-width:850px;line-height:1.7;">
+  <p>Download hele debatstofarkivet sammen med de aktuelle nøgleord, pointregler og feedback.
+    Brug filen i en samtale med ChatGPT om at forbedre dine redaktionelle kriterier.</p>
+  <p>Filen indeholder rubrikker, manchetter, metadata, gemte og genberegnede scorer samt stjernemarkeringer.
+    Den indeholder også reglerne for feedbackens betydning for sorteringen.</p>
+  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+  <p><a class="btn-sort btn-sort-active" href="{{ url_for('analysis_export.download') }}">Download analysefil</a></p>
+  <ol>
+    <li>Klik “Download analysefil”. Vent, mens filen bliver samlet.</li>
+    <li>Åbn din samtale i ChatGPT, og vedhæft den downloadede JSON-fil med papirclipsen eller plusknappen.</li>
+    <li>Skriv: “Hjælp mig gennem en samtale med at forbedre analyse- og prioriteringsreglerne. Start med at spørge om mine redaktionelle mål.”</li>
+  </ol>
+  <p>Filen sendes først til ChatGPT, når du selv vedhæfter den. Eksporten ændrer hverken scorer,
+    regler eller artikler og bruger ingen betalt API.</p>
+  <p>Vurderingen bygger på rubrik og manchet, ikke på hele artiklen. En artikel uden stjerne er
+    ikke nødvendigvis uinteressant. Filen indeholder en udviklingsgruppe og en kontrolgruppe,
+    så forslag senere kan afprøves på andre eksempler.</p>
+</div>
+{% endblock %}
