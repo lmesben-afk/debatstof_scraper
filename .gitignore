@@ -9,3 +9,4 @@ output/
 *.sqlite3
 articles.json
 new_articles.json
+app-password.json

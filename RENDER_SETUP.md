@@ -183,3 +183,20 @@ Prøve med den tidligere database på 2.830 artikler: gyldig JSON på ca. 5,6 MB
 inklusive regler og 15 feedbackposter. Databasens filhash var uændret efter eksport.
 Store arkiver kan tage lidt tid at samle. Det er den aktuelle database på Render,
 der eksporteres ved download; udviklingsprøven er ikke en kopi af livearkivet.
+
+## Skift adgangskode inde i appen
+
+Åbn `/adgangskode`, log ind med det nuværende login, indtast den nye adgangskode
+to gange og klik **Gem adgangskode**. Brugernavnet ændres ikke. Ændringen gælder
+alle tre apps, og gamle loginoplysninger afvises straks ved efterfølgende requests.
+Browseren kan bede om login igen efter skiftet.
+
+Den saltede passwordhash gemmes atomisk i `DATA_DIR/app-password.json` med private
+filrettigheder. Rå adgangskoder gemmes ikke på disken eller i GitHub. Filen på
+den varige disk har forrang over `APP_PASSWORD` i Render og overlever deploys.
+`APP_PASSWORD` er kun initial adgangskode, når hashfilen ikke findes; ændring af
+miljøvariablen alene tilsidesætter derfor ikke en kode valgt i appen. Ved tabt
+adgang kræver nulstilling adgang til Render: indstil initial password sikkert i
+Environment og fjern hashfilen fra disken via Shell før genstart. En korrupt eller
+ulæselig hashfil giver afvist adgang; systemet falder ikke tilbage til den gamle kode.
+`APP_PASSWORD_FILE` kan valgfrit angive en anden placering på den varige disk.
